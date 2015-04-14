@@ -416,11 +416,11 @@ rem50Lred<-as.numeric(perredach95L[11,1:206])
 
 par(mfrow=c(3,1))
 par(mar=c(5,5,2,2))
-xv<-data$T20[1:206]
+xv<-data$T50[1:206]
 #xv<-data$prevalence[1:206]/data$N[1:206]
-plot(rem1red~xv,ylab=expression(paste("Proportionate reduction in ",beta)),
+plot(rem1red~xv,ylab=expression(paste("Proportionate reduction in ",theta)),
      ylim=c(0,1),
-     xlab="Proportion of parasites in 20% most infected hosts",
+     xlab="Proportion of parasites in 50% most infected hosts",
      xlim=c(0,1),pch="",cex.lab=1.2)
 
 for (i in 1:206){
