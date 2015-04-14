@@ -56,16 +56,23 @@ redu[,i]<-as.numeric(c(data[i,35:55]))
 lines(redu[,i]~prevalence)
 }
 
-parasitesTreated<-as.numeric(c(data[1,14:34]))
-plot(parasitesTreated~prevalence,
+par(mfrow=c(1,1))
+par(mar=c(5,5,2,2))
+parasitesTreated<-as.numeric(data[1,14:34])
+plot(parasitesTreated~prevalence,pch="",
      ylim=c(0,1),xlim=c(0,1),
-     ylab="Proportion of parasites removed per hosts treated",xlab="Proportion of hosts treated")
+     ylab="Proportion of parasites",xlab="Proportion of hosts treated")
 treated<-matrix(nrow=length(prevalence),ncol=length(data$N),data=NA)
 for (i in 1:length(data$N)){
-  treated[,i]<-as.numeric(c(data[i,14:34]))
-  lines(treated[,i]~prevalence)
+  treated[,i]<-as.numeric(data[i,14:34])
+  lines(c(treated[,i])~prevalence,col="gray",)
 }
-
+meantreated<-as.numeric(21)
+for (i in 1:21){ 
+  meantreated[i]<-mean(treated[i,])
+}
+lines(c(0,meantreated)~c(0,prevalence),lty=2,lwd=2,col="red")
+    
 ##Create a distribution of the count data estimated for each population
 dim(data);head(data)
 distribs<-matrix(nrow=21,ncol=206)
@@ -216,9 +223,9 @@ dataout95lower[,10]<-theta46lower;colnames(dataout95lower)<-sub("V10","Study46",
 dataout95lower[,11]<-theta47lower;colnames(dataout95lower)<-sub("V11","Study47",colnames(dataout95lower))
 
 
-write.csv(dataoutmean,"C:\\Users\\Ellie\\Documents\\2080\\model_outputMEAN.csv")
-write.csv(dataout95upper,"C:\\Users\\Ellie\\Documents\\2080\\model_output95upper.csv")
-write.csv(dataout95lower,"C:\\Users\\Ellie\\Documents\\2080\\model_output95lower.csv")
+#write.csv(dataoutmean,"C:\\Users\\Ellie\\Documents\\2080\\model_outputMEAN.csv")
+#write.csv(dataout95upper,"C:\\Users\\Ellie\\Documents\\2080\\model_output95upper.csv")
+#write.csv(dataout95lower,"C:\\Users\\Ellie\\Documents\\2080\\model_output95lower.csv")
 
 plot(theta36~proportions,ylim=c(0,1),xlim=c(0,1),pch="",
      ylab="Transmission Probability",xlab="Proportion of hosts treated")               
@@ -261,55 +268,183 @@ for (i in 1:206){
                                         prev55[,i],prev60[,i],prev65[,i],prev70[,i],prev75[,i],prev80[,i],
                                         prev85[,i],prev90[,i],prev95[,i]),
                                .Dim=c(21,21)))
-
-fit1 <- stan(file="C:\\Users\\Ellie\\Documents\\RStudioProjects\\2080\\modelA2.stan", data=data2,
-             iter=1000, chains=2)
-
-#print(fit1)
-#data$Label
-#proportions<-c(0,0.01,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95)
-params = extract(fit1);names(params)
-dataoutmean_i[,i]<-c(mean(params$theta[,1]),mean(params$theta[,2]),mean(params$theta[,3]),mean(params$theta[,4]),
-           mean(params$theta[,5]),mean(params$theta[,6]),mean(params$theta[,7]),mean(params$theta[,8]),
-           mean(params$theta[,9]),mean(params$theta[,10]),mean(params$theta[,11]),mean(params$theta[,12]),
-           mean(params$theta[,13]),mean(params$theta[,14]),mean(params$theta[,15]),mean(params$theta[,16]),
-           mean(params$theta[,17]),mean(params$theta[,18]),mean(params$theta[,19]),mean(params$theta[,20]),
-           mean(params$theta[,21]))
-dataout95upper_i[,i]<-as.numeric(c(quantile(params$theta[,1],0.975),quantile(params$theta[,2],0.975),quantile(params$theta[,3],0.975),quantile(params$theta[,4],0.975),
-                           quantile(params$theta[,5],0.975),quantile(params$theta[,6],0.975),quantile(params$theta[,7],0.975),quantile(params$theta[,8],0.975),
-                           quantile(params$theta[,9],0.975),quantile(params$theta[,10],0.975),quantile(params$theta[,11],0.975),quantile(params$theta[,12],0.975),
-                           quantile(params$theta[,13],0.975),quantile(params$theta[,14],0.975),quantile(params$theta[,15],0.975),quantile(params$theta[,16],0.975),
-                           quantile(params$theta[,17],0.975),quantile(params$theta[,18],0.975),quantile(params$theta[,19],0.975),quantile(params$theta[,20],0.975),
-                           quantile(params$theta[,21],0.975)))
-dataout95lower_i[,i]<-as.numeric(c(quantile(params$theta[,1],0.025),quantile(params$theta[,2],0.025),quantile(params$theta[,3],0.025),quantile(params$theta[,4],0.025),
-                           quantile(params$theta[,5],0.025),quantile(params$theta[,6],0.025),quantile(params$theta[,7],0.025),quantile(params$theta[,8],0.025),
-                           quantile(params$theta[,9],0.025),quantile(params$theta[,10],0.025),quantile(params$theta[,11],0.025),quantile(params$theta[,12],0.025),
-                           quantile(params$theta[,13],0.025),quantile(params$theta[,14],0.025),quantile(params$theta[,15],0.025),quantile(params$theta[,16],0.025),
-                           quantile(params$theta[,17],0.025),quantile(params$theta[,18],0.025),quantile(params$theta[,19],0.025),quantile(params$theta[,20],0.025),
-                           quantile(params$theta[,21],0.025)))
-
+  
+  fit1 <- stan(file="C:\\Users\\Ellie\\Documents\\RStudioProjects\\2080\\modelA2.stan", data=data2,
+               iter=1000, chains=2)
+  
+  #print(fit1)
+  #data$Label
+  #proportions<-c(0,0.01,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95)
+  params = extract(fit1);names(params)
+  dataoutmean_i[,i]<-c(mean(params$theta[,1]),mean(params$theta[,2]),mean(params$theta[,3]),mean(params$theta[,4]),
+                       mean(params$theta[,5]),mean(params$theta[,6]),mean(params$theta[,7]),mean(params$theta[,8]),
+                       mean(params$theta[,9]),mean(params$theta[,10]),mean(params$theta[,11]),mean(params$theta[,12]),
+                       mean(params$theta[,13]),mean(params$theta[,14]),mean(params$theta[,15]),mean(params$theta[,16]),
+                       mean(params$theta[,17]),mean(params$theta[,18]),mean(params$theta[,19]),mean(params$theta[,20]),
+                       mean(params$theta[,21]))
+  dataout95upper_i[,i]<-as.numeric(c(quantile(params$theta[,1],0.975),quantile(params$theta[,2],0.975),quantile(params$theta[,3],0.975),quantile(params$theta[,4],0.975),
+                                     quantile(params$theta[,5],0.975),quantile(params$theta[,6],0.975),quantile(params$theta[,7],0.975),quantile(params$theta[,8],0.975),
+                                     quantile(params$theta[,9],0.975),quantile(params$theta[,10],0.975),quantile(params$theta[,11],0.975),quantile(params$theta[,12],0.975),
+                                     quantile(params$theta[,13],0.975),quantile(params$theta[,14],0.975),quantile(params$theta[,15],0.975),quantile(params$theta[,16],0.975),
+                                     quantile(params$theta[,17],0.975),quantile(params$theta[,18],0.975),quantile(params$theta[,19],0.975),quantile(params$theta[,20],0.975),
+                                     quantile(params$theta[,21],0.975)))
+  dataout95lower_i[,i]<-as.numeric(c(quantile(params$theta[,1],0.025),quantile(params$theta[,2],0.025),quantile(params$theta[,3],0.025),quantile(params$theta[,4],0.025),
+                                     quantile(params$theta[,5],0.025),quantile(params$theta[,6],0.025),quantile(params$theta[,7],0.025),quantile(params$theta[,8],0.025),
+                                     quantile(params$theta[,9],0.025),quantile(params$theta[,10],0.025),quantile(params$theta[,11],0.025),quantile(params$theta[,12],0.025),
+                                     quantile(params$theta[,13],0.025),quantile(params$theta[,14],0.025),quantile(params$theta[,15],0.025),quantile(params$theta[,16],0.025),
+                                     quantile(params$theta[,17],0.025),quantile(params$theta[,18],0.025),quantile(params$theta[,19],0.025),quantile(params$theta[,20],0.025),
+                                     quantile(params$theta[,21],0.025)))
+  
 }
 
-write.csv(dataoutmean_i,"C:\\Users\\Ellie\\Documents\\2080\\model_outputMEAN_i.csv")
-write.csv(dataout95upper_i,"C:\\Users\\Ellie\\Documents\\2080\\model_output95upper_i.csv")
-write.csv(dataout95lower_i,"C:\\Users\\Ellie\\Documents\\2080\\model_output95lower_i.csv")
+#write.csv(dataoutmean_i,"C:\\Users\\Ellie\\Documents\\2080\\model_outputMEAN_i.csv")
+#write.csv(dataout95upper_i,"C:\\Users\\Ellie\\Documents\\2080\\model_output95upper_i.csv")
+#write.csv(dataout95lower_i,"C:\\Users\\Ellie\\Documents\\2080\\model_output95lower_i.csv")
 
-plot(theta36~proportions,ylim=c(0,1),xlim=c(0,1),pch="",
-     ylab="Transmission Probability",xlab="Proportion of hosts treated")               
-lines(theta36~proportions)
-lines(theta37~proportions)
-lines(theta38~proportions)
-lines(theta40~proportions)
-lines(theta41~proportions)
-polygon(c(proportions, rev(proportions)),c(theta36Upper,rev(theta36lower)),border=NA, col="aquamarine1")
-lines(theta36~proportions)
 
-polygon(c(proportions, rev(proportions)),c(theta37Upper,rev(theta37lower)),border=NA, col="aquamarine1")
-lines(theta37~proportions)
+dataoutmean<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\model_outputMEAN_i.csv")
+dataout95upper<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\model_output95upper_i.csv")
+dataout95lower<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\model_output95lower_i.csv")
+colnames(dataoutmean)<-colnames(dataout95lower)<-colnames(dataout95upper)<-data$Label[1:206]
 
-polygon(c(proportions, rev(proportions)),c(theta38Upper,rev(theta38lower)),border=NA, col="aquamarine1")
-lines(theta38~proportions)
+alldata<-as.numeric(dataoutmean[1,2:207])
+rem20<-as.numeric(dataoutmean[6,2:207])
+rem50<-as.numeric(dataoutmean[12,2:207])
 
-polygon(c(proportions, rev(proportions)),c(theta40Upper,rev(theta40lower)),border=NA, col="aquamarine1")
-lines(theta40~proportions)
+alldataU<-as.numeric(dataout95upper[1,2:207])
+rem20U<-as.numeric(dataout95upper[6,2:207])
+rem50U<-as.numeric(dataout95upper[12,2:207])
+
+alldataL<-as.numeric(dataout95lower[1,2:207])
+rem20L<-as.numeric(dataout95lower[6,2:207])
+rem50L<-as.numeric(dataout95lower[12,2:207])
+
+par(mfrow=c(1,1))
+par(mar=c(5,5,2,2))
+xv<-data$T20[1:206]
+#xv<-data$prevalence[1:206]/data$N[1:206]
+plot(alldata~xv,ylab="Transmission probability",ylim=c(0,1),
+     xlab="Proportion of parasites in 20% most infected hosts",xlim=c(0,1),pch="",cex.lab=1.2)
+
+for (i in 1:206){
+  segments(xv[i], alldataU[i], x1 = xv[i], y1 = alldataL[i],
+           col  = terrain.colors(10,alpha = 0.1), lty = 1, lwd = 5)
+}
+
+for (i in 1:206){
+  segments(xv[i], rem20U[i], x1 = xv[i], y1 = rem20L[i],
+           col  = terrain.colors(10,alpha = 0.5), lty = 1, lwd = 5)
+}
+
+for (i in 1:206){
+  segments(xv[i], rem50U[i], x1 = xv[i], y1 = rem50L[i],
+           col  = terrain.colors(10,alpha = 0.8), lty = 1, lwd = 5)
+}
+
+points(alldata~xv,col="lightblue",pch=20);points(rem50~xv,col="black",pch=20);points(rem20~xv,col="blue",pch=20)
+
+legend(0,1,legend=c("No treatment","Treat 20%","Treat 50%"),
+       col=c("lightblue","blue","black"),
+       pch=20,bty="n")
+
+
+###################################################################
+##
+###
+####  Now think about the reduction in transmission potential that is acheived with x% treatment
+###
+##
+
+reductionacheived<-expand.grid(seq(1,20))
+for(i in 2:207){
+  for (j in 2:21){
+    reductionacheived[j-1,i-1]<-dataoutmean[1,i]-dataoutmean[j,i]
+  }
+}
+colnames(reductionacheived)<-data$Label[1:206]
+
+reductionach95U<-expand.grid(seq(1,20))
+for(i in 2:207){
+  for (j in 2:21){
+    reductionach95U[j-1,i-1]<-dataout95upper[1,i]-dataout95upper[j,i]
+  }
+}
+colnames(reductionach95U)<-data$Label[1:206]
+
+reductionach95L<-expand.grid(seq(1,20))
+for(i in 2:207){
+  for (j in 2:21){
+    reductionach95L[j-1,i-1]<-dataout95lower[1,i]-dataout95lower[j,i]
+  }
+}
+colnames(reductionach95L)<-data$Label[1:206]
+
+##percentage reduction acheived
+perredacheived<-expand.grid(seq(1,20))
+for(i in 2:207){
+  for (j in 2:21){
+    perredacheived[j-1,i-1]<-(dataoutmean[1,i]-dataoutmean[j,i])/dataoutmean[1,i]
+  }
+}
+
+perredach95U<-expand.grid(seq(1,20))
+for(i in 2:207){
+  for (j in 2:21){
+    perredach95U[j-1,i-1]<-(dataout95upper[1,i]-dataout95upper[j,i])/dataout95upper[1,i]
+  }
+}
+
+perredach95L<-expand.grid(seq(1,20))
+for(i in 2:207){
+  for (j in 2:21){
+    perredach95L[j-1,i-1]<-(dataout95lower[1,i]-dataout95lower[j,i])/dataout95lower[1,i]
+  }
+}
+colnames(perredacheived)<-colnames(perredach95U)<-colnames(perredach95L)<-data$Label[1:206]
+
+rem1red<-as.numeric(perredacheived[1,1:206])
+rem20red<-as.numeric(perredacheived[5,1:206])
+rem50red<-as.numeric(perredacheived[11,1:206])
+
+rem1Ured<-as.numeric(perredach95U[1,1:206])
+rem20Ured<-as.numeric(perredach95U[5,1:206])
+rem50Ured<-as.numeric(perredach95U[11,1:206])
+
+rem1Lred<-as.numeric(perredach95L[1,1:206])
+rem20Lred<-as.numeric(perredach95L[5,1:206])
+rem50Lred<-as.numeric(perredach95L[11,1:206])
+
+par(mfrow=c(3,1))
+par(mar=c(5,5,2,2))
+xv<-data$T20[1:206]
+#xv<-data$prevalence[1:206]/data$N[1:206]
+plot(rem1red~xv,ylab=expression(paste("Proportionate reduction in ",beta)),
+     ylim=c(0,1),
+     xlab="Proportion of parasites in 20% most infected hosts",
+     xlim=c(0,1),pch="",cex.lab=1.2)
+
+for (i in 1:206){
+  segments(xv[i], rem1Ured[i], x1 = xv[i], y1 = rem1Lred[i],
+           col  = terrain.colors(10,alpha = 0.1), lty = 1, lwd = 5)
+}
+
+for (i in 1:206){
+  segments(xv[i], rem20Ured[i], x1 = xv[i], y1 = rem20Lred[i],
+           col  = terrain.colors(10,alpha = 0.5), lty = 1, lwd = 5)
+}
+
+for (i in 1:206){
+  segments(xv[i], rem50Ured[i], x1 = xv[i], y1 = rem50Lred[i],
+           col  = terrain.colors(10,alpha = 0.8), lty = 1, lwd = 5)
+}
+
+points(rem1red~xv,col="lightblue",pch=20);points(rem50red~xv,col="black",pch=20);points(rem20red~xv,col="blue",pch=20)
+
+legend(0,1,legend=c("Remove 1%","Remove 20%","Remove 50%"),
+       col=c("lightblue","blue","black"),
+       pch=20,bty="n")
+
+sum(ifelse(rem20red>0.95,1,0))/206 ##A 95% or better reduction in transmission probability can be acheived in 32% of the studies
+sum(ifelse(rem50red>0.95,1,0))/206 
+
 
