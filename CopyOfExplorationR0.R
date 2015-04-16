@@ -56,6 +56,10 @@ redu[,i]<-as.numeric(c(data[i,35:55]))
 lines(redu[,i]~prevalence)
 }
 
+
+###############################################
+## Figure 1
+
 par(mfrow=c(1,1))
 par(mar=c(5,5,2,2))
 parasitesTreated<-as.numeric(data[1,14:34])
@@ -447,4 +451,56 @@ legend(0,1,legend=c("Remove 1%","Remove 20%","Remove 50%"),
 sum(ifelse(rem20red>0.95,1,0))/206 ##A 95% or better reduction in transmission probability can be acheived in 32% of the studies
 sum(ifelse(rem50red>0.95,1,0))/206 
 
+###################################################################################
+## Figure 2a
+par(mfrow=c(1,1))
+plot(log(data$k+1),data$T10,pch=20,col="grey",
+     ylab="Proportion of parasites in x% of hosts",
+     xlab="Log k",cex.lab=1.1,log="x",xlim=c(0.01,5))
+points(log(data$k+1),data$T20,col="red",pch=20,cex=2)
+points(log(data$k+1),data$T30,pch=20,col="grey")
+points(log(data$k+1),data$T50,pch=20,col="grey")
 
+legend(0.01,0.6,
+       legend=c(expression("t"[10]),expression("t"[20]),
+       expression("t"[30]),expression("t"[50])),
+       col=c("grey","red","grey","grey"),
+       pch=20,cex=1.4)
+
+abline(v=0.055,lty=2);text(0.045,0.2,"k: 1.057")
+
+abline(v=0.03,lty=2);text(0.024,0.2,"k: 1.030")
+
+abline(v=0.1,lty=2);text(0.124,0.2,"k: 1.105")
+
+abline(v=0.2,lty=2);text(0.245,0.2,"k: 1.221")
+
+
+names(data)
+dat2<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\DataFinalApril2015.csv",header=TRUE)
+names(dat2)
+data3<-merge(data,dat2,by.x="Label",by.y="Label")
+dim(data3)
+names(data3)
+## Figure 2b
+par(mfrow=c(1,1))
+plot(data3$Gini.Co.efficient,data$T10,pch=20,col="grey",
+     ylab="Proportion of parasites in x% of hosts",
+     xlab="Gini Co-efficient",cex.lab=1.1,xlim=c(0,1))
+points(data3$Gini.Co.efficient,data$T20,col="red",pch=20,cex=2)
+points(data3$Gini.Co.efficient,data$T30,pch=20,col="grey")
+points(data3$Gini.Co.efficient,data$T50,pch=20,col="grey")
+
+legend(0.0,1,
+       legend=c(expression("t"[10]),expression("t"[20]),
+                expression("t"[30]),expression("t"[50])),
+       col=c("grey","red","grey","grey"),
+       pch=20,cex=1.4)
+
+abline(v=0.94,lty=2);text(0.96,0.2,"0.94")
+
+abline(v=0.9,lty=2);text(0.92,0.25,"0.90")
+
+abline(v=0.86,lty=2);text(0.88,0.3,"0.86")
+
+abline(v=0.78,lty=2);text(0.8,0.35,"0.78")
