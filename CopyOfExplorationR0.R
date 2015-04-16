@@ -301,14 +301,14 @@ for (i in 1:206){
   
 }
 
-#write.csv(dataoutmean_i,"C:\\Users\\Ellie\\Documents\\2080\\model_outputMEAN_i.csv")
-#write.csv(dataout95upper_i,"C:\\Users\\Ellie\\Documents\\2080\\model_output95upper_i.csv")
-#write.csv(dataout95lower_i,"C:\\Users\\Ellie\\Documents\\2080\\model_output95lower_i.csv")
+#write.csv(dataoutmean_i,"C:\\Users\\Ellie\\Documents\\2080\\model_outputMEAN_i2.csv")
+#write.csv(dataout95upper_i,"C:\\Users\\Ellie\\Documents\\2080\\model_output95upper_i2.csv")
+#write.csv(dataout95lower_i,"C:\\Users\\Ellie\\Documents\\2080\\model_output95lower_i2.csv")
 
 
-dataoutmean<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\model_outputMEAN_i.csv")
-dataout95upper<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\model_output95upper_i.csv")
-dataout95lower<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\model_output95lower_i.csv")
+dataoutmean<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\model_outputMEAN_i2.csv")
+dataout95upper<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\model_output95upper_i2.csv")
+dataout95lower<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\model_output95lower_i2.csv")
 colnames(dataoutmean)<-colnames(dataout95lower)<-colnames(dataout95upper)<-data$Label[1:206]
 
 alldata<-as.numeric(dataoutmean[1,2:207])
@@ -420,11 +420,11 @@ rem50Lred<-as.numeric(perredach95L[11,1:206])
 
 par(mfrow=c(3,1))
 par(mar=c(5,5,2,2))
-xv<-data$T50[1:206]
+xv<-data$T10[1:206]
 #xv<-data$prevalence[1:206]/data$N[1:206]
 plot(rem1red~xv,ylab=expression(paste("Proportionate reduction in ",theta)),
      ylim=c(0,1),
-     xlab="Proportion of parasites in 50% most infected hosts",
+     xlab="Proportion of parasites in 10% most infected hosts",
      xlim=c(0,1),pch="",cex.lab=1.2)
 
 for (i in 1:206){
