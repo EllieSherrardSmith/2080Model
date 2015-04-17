@@ -454,18 +454,18 @@ sum(ifelse(rem50red>0.95,1,0))/206
 ###################################################################################
 ## Figure 2a
 par(mfrow=c(1,1))
-plot(log(data$k+1),data$T10,pch=20,col="grey",
+plot(log(data$k+1),data$T10,pch=20,col="grey15",
      ylab="Proportion of parasites in x% of hosts",
      xlab="Log k",cex.lab=1.1,log="x",xlim=c(0.01,5))
-points(log(data$k+1),data$T20,col="red",pch=20,cex=2)
-points(log(data$k+1),data$T30,pch=20,col="grey")
-points(log(data$k+1),data$T50,pch=20,col="grey")
+points(log(data$k+1),data$T20,col="grey30",pch=20,cex=2)
+points(log(data$k+1),data$T30,col="grey50",pch=17)
+points(log(data$k+1),data$T50,col="grey85",pch=15)
 
 legend(0.01,0.6,
        legend=c(expression("t"[10]),expression("t"[20]),
        expression("t"[30]),expression("t"[50])),
-       col=c("grey","red","grey","grey"),
-       pch=20,cex=1.4)
+       col=c("grey15","grey30","grey50","grey85"),
+       pch=c(20,20,17,15),cex=1.4)
 
 abline(v=0.055,lty=2);text(0.045,0.2,"k: 1.057")
 
