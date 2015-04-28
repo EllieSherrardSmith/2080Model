@@ -6,6 +6,7 @@ library(coda)
 library(R2OpenBUGS)
 library(ggplot2)
 library(reshape2)
+library(adegenet)
 
 data<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\Exploring R0.csv",header=TRUE)
 head(data);summary(data)
@@ -59,6 +60,7 @@ lines(redu[,i]~prevalence)
 }
 
 
+                     
 ###############################################
 ## Figure 1
 
@@ -379,15 +381,19 @@ data4out95lower_i[,i]<-as.numeric(c(quantile(params3$theta[,1],0.025),quantile(p
 
 }
 
-write.csv(data3outmean_i,"C:\\Users\\Ellie\\Documents\\2080\\least infected data_mean.csv")
-write.csv(data3out95upper_i,"C:\\Users\\Ellie\\Documents\\2080\\least infected data_upper.csv")
-write.csv(data3out95lower_i,"C:\\Users\\Ellie\\Documents\\2080\\least infected data_lower.csv")
+#write.csv(dataoutmean_i,"C:\\Users\\Ellie\\Documents\\2080\\model_outputMEAN_i2.csv")
+#write.csv(dataout95upper_i,"C:\\Users\\Ellie\\Documents\\2080\\model_output95upper_i2.csv")
+#write.csv(dataout95lower_i,"C:\\Users\\Ellie\\Documents\\2080\\model_output95lower_i2.csv")
 
-write.csv(data4outmean_i,"C:\\Users\\Ellie\\Documents\\2080\\random data_mean.csv")
-write.csv(data4out95upper_i,"C:\\Users\\Ellie\\Documents\\2080\\random data_upper.csv")
-write.csv(data4out95lower_i,"C:\\Users\\Ellie\\Documents\\2080\\random data_lower.csv")
+#write.csv(data3outmean_i,"C:\\Users\\Ellie\\Documents\\2080\\least infected data_mean.csv")
+#write.csv(data3out95upper_i,"C:\\Users\\Ellie\\Documents\\2080\\least infected data_upper.csv")
+#write.csv(data3out95lower_i,"C:\\Users\\Ellie\\Documents\\2080\\least infected data_lower.csv")
 
+#write.csv(data4outmean_i,"C:\\Users\\Ellie\\Documents\\2080\\random data_mean.csv")
+#write.csv(data4out95upper_i,"C:\\Users\\Ellie\\Documents\\2080\\random data_upper.csv")
+#write.csv(data4out95lower_i,"C:\\Users\\Ellie\\Documents\\2080\\random data_lower.csv")
 
+par(mfrow=c(1,1))
 dataoutmean<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\topmost infected data_mean.csv")
 dataout95upper<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\topmost infected data_upper.csv")
 dataout95lower<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\topmost infected data_lower.csv")
@@ -401,72 +407,238 @@ data4out95upper<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\random data_upper.
 data4out95lower<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\random data_lower.csv")
 
 ###check that the first column is DATA else delete ## rename columns
-colnames(dataoutmean)<-colnames(data3outmean)<-colnames(data4outmean)<-data$Label[1:206]
+colnames(dataoutmean)<-data$Label[1:206]
+colnames(data3outmean)<-colnames(data4outmean)<-c("count",data$Label[1:206])
 
 reductionacheivedt20<-expand.grid(seq(1,20))##reduction acheived most infected hosts
 for(i in 1:206){
   for (j in 2:21){
     reductionacheivedt20[j-1,i]<-(dataoutmean[1,i]-dataoutmean[j,i])/dataoutmean[1,i]
   }
-};colnames(reductionacheivedt20)<-data$Label[1:3] 
-reductionacheivedt20[21,]<-reductionacheivedw20[21,]<-1
+};colnames(reductionacheivedt20)<-data$Label[1:206] 
+#reductionacheivedt20[21,]<-reductionacheivedw20[21,]<-1
 
 reductionacheivedw20<-expand.grid(seq(1,20))##reduction for least infected hosts
-for(i in 1:206){
+for(i in 2:207){
   for (j in 2:21){
-    reductionacheivedw20[j-1,i]<-(data3outmean_i[1,i]-data3outmean_i[j,i])/data3outmean_i[1,i]
+    reductionacheivedw20[j-1,i]<-(data3outmean[1,i]-data3outmean[j,i])/data3outmean[1,i]
   }
-};colnames(reductionacheivedw20)<-data$Label[1:206] 
+};colnames(reductionacheivedw20)<-c("count",data$Label[1:206])
 
-  for (j in 1:206){
-    for(i in 1:21){
+  for (j in 2:207){
+    for(i in 1:20){
 reductionacheivedw20[i,j]<-ifelse(reductionacheivedw20[i,j]<0,0,reductionacheivedw20[i,j])
 }}
 
 reductionacheivedr20<-expand.grid(seq(1,20))##reduction for least infected hosts
-for(i in 1:3){
+for(i in 2:207){
   for (j in 2:21){
     reductionacheivedr20[j-1,i]<-(data4outmean[1,i]-data4outmean[j,i])/data4outmean[1,i]
   }
-};colnames(reductionacheivedr20)<-data$Label[1:3] 
+};colnames(reductionacheivedr20)<-c("count",data$Label[1:206]) 
 
-proportion<-c(0.01,seq(0.05,0.95,0.05),1)
-plot(reductionacheivedt20[,1]~proportion,pch="",ylim=c(0,1),xlim=c(0,1),
+#################
+## Figure 3
+proportion<-c(0.01,seq(0.05,0.95,0.05))
+plot(reductionacheivedt20[,1]~proportion,pch="",ylim=c(0,1),xlim=c(0,1),par(las=1),
+     xlab="Proportion of the host population treated",cex.lab=1.1,bty="n",yaxt="n",
      ylab=expression(paste("Effective reduction in  ", theta)))
-for (i in 1:206){
-lines(reductionacheivedt20[,i]~proportion,lty=3,col="grey65")
-lines(reductionacheivedw20[,i]~proportion,lty=3,col="grey80")
-lines(reductionacheivedr20[,i]~proportion,lty=3,col="grey60")
-}
-meansdat<-means3dat<-means4dat<-updat<-up3dat<-up4dat<-lowdat<-low3dat<-low4dat<-numeric(21)
-for (i in 1:21){
-  meansdat[i]<-mean(sum(reductionacheivedt20[i,])/206)
-  means3dat[i]<-mean(sum(reductionacheivedw20[i,],na.rm=TRUE)/206)
-  means4dat[i]<-mean(reductionacheivedr20[i,])
+axis(2,at=seq(0,1,0.2),labels=seq(0,1,0.2),par(las=2))
+
+#for (i in 1:206){
+#lines(reductionacheivedt20[,i]~proportion,lty=3,col="grey65")
+#lines(reductionacheivedw20[,i]~proportion,lty=3,col="grey80")
+#lines(reductionacheivedr20[,i]~proportion,lty=3,col="grey60")
+#}
+meansdat<-means3dat<-means4dat<-maxdat<-max3dat<-max4dat<-mindat<-min3dat<-min4dat<-sddat<-sd3dat<-sd4dat<-numeric(20)
+for (i in 1:20){
+  meansdat[i]<-(sum(reductionacheivedt20[i,])/206)
+  means3dat[i]<-(sum(reductionacheivedw20[i,2:207],na.rm=TRUE)/204)
+  means4dat[i]<-(sum(reductionacheivedr20[i,2:207],na.rm=TRUE)/204)
   
- # updat[i]<-quantile(reductionacheivedt20[i,],0.9)
-#  up3dat[i]<-quantile(reductionacheivedw20[i,],0.975)
-#  up4dat[i]<-quantile(reductionacheivedr20[i,],0.975)
+  maxdat[i]<-max(reductionacheivedt20[i,])
+  max3dat[i]<-max(reductionacheivedw20[i,2:207],na.rm=TRUE)
+  max4dat[i]<-max(reductionacheivedr20[i,2:207],na.rm=TRUE)
   
-#  lowdat[i]<-quantile((reductionacheivedt20[1,],0.025)
-#  low3dat[i]<-quantile(reductionacheivedw20[i,],0.025)
-#  low4dat[i]<-quantile(reductionacheivedr20[i,],0.025)  
+  mindat[i]<-min(reductionacheivedt20[i,])
+  min3dat[1]<-min(reductionacheivedw20[i,2:207],na.rm=TRUE)
+  min4dat[i]<-min(reductionacheivedr20[i,2:207],na.rm=TRUE)
+  
+  sddat[i]<-sd(reductionacheivedt20[i,],na.rm=TRUE)
+  sd3dat[i]<-sd(reductionacheivedw20[i,2:207],na.rm=TRUE)
+  sd4dat[i]<-sd(reductionacheivedr20[i,2:207],na.rm=TRUE)
+  
 }
-lines(meansdat~proportion,col="black",lty=2,lwd=2)
-lines(means3dat~proportion,col="black",lty=2,lwd=3)
-lines(means4dat~proportion,col="black",lty=2,lwd=2)
+lines(c(0,meansdat)~c(0,proportion),col="black",lty=1,lwd=2)
+lines(c(0,means3dat)~c(0,proportion),col="grey50",lty=1,lwd=2)
+lines(c(0,means4dat)~c(0,proportion),col="grey50",lty=1,lwd=2)
 
-polygon(c(proportion, rev(proportion)),c(updat,rev(lowdat)),border=NA, col="aquamarine1")
-polygon(c(proportion, rev(proportion)),c(up3dat,rev(low3dat)),border=NA, col="aquamarine1")
+sdplus<-meansdat+sddat;sdminus<-meansdat-sddat
+sdplus<-ifelse(sdplus<1,sdplus,1);sdminus<-ifelse(sdminus<0,0,sdminus)
+sdplus3<-means3dat+sd3dat;sdminus3<-means3dat-sd3dat
+sdplus3<-ifelse(sdplus3<1,sdplus3,1);sdminus3<-ifelse(sdminus3<0,0,sdminus3)
+sdplus4<-means4dat+sd4dat;sdminus4<-means4dat-sd4dat
+sdplus4<-ifelse(sdplus4<1,sdplus4,1);sdminus4<-ifelse(sdminus4<0,0,sdminus4)
+
+polygon(c(proportion, rev(proportion)),c(sdplus,rev(sdminus)),border=NA, col=transp("darkseagreen1",alpha=0.3))
+polygon(c(proportion, rev(proportion)),c(sdplus3,rev(sdminus3)),border=NA, col=transp("darkseagreen4",alpha=0.2))
+polygon(c(proportion, rev(proportion)),c(sdplus4,rev(sdminus4)),border=NA, col=transp("darkseagreen3",alpha=0.2))
+
+segments(0.2, y0=-0.2, 0.2, y1 = meansdat[5],lty = 4, lwd = 1)
+segments(-0.2, y0=meansdat[5], 0.2, y1 = meansdat[5],lty = 4, lwd = 1)
+segments(-0.2, y0=means3dat[5], 0.2, y1 = means3dat[5],lty = 4, lwd = 1)
+segments(-0.2, y0=means4dat[5], 0.2, y1 = means4dat[5],lty = 4, lwd = 1)
 
 
-segment(x1=0.2,y1=0,x2=0.2,y2=##wherever it crosses the topmost line##,col="blue")##
 
-
+countzeros<-as.numeric(reductionacheivedw20[5,],na.action=na.exclude)
+countzeros<-c(countzeros[2],countzeros[4:80],countzeros[82:207])
+sum(ifelse(countzeros==0,1,0))
 #write.csv(dataoutmean_i,"C:\\Users\\Ellie\\Documents\\2080\\model_outputMEAN_i2.csv")
 #write.csv(dataout95upper_i,"C:\\Users\\Ellie\\Documents\\2080\\model_output95upper_i2.csv")
 #write.csv(dataout95lower_i,"C:\\Users\\Ellie\\Documents\\2080\\model_output95lower_i2.csv")
 treatments<-rep(c("0","1",seq(from=5,to=95,by=5)),each=21)
+
+###############################################
+##
+###
+#### And Now for R0
+###
+##
+################################################
+for (i in 1:206){
+  
+  data$ro[i]<-(data$k[i] * ( (1/(1-(data$prevalence[i]/data$N[i]))) ^ (1/data$k[i]) ) ) - data$k[i]
+}
+plot(data$ro,data$T20,ylim=c(0,1),xlim=c(0,2),xaxt="n",
+     ylab="Proportion of parasites in top most infected hosts",
+     xlab=expression(paste(R[0])))
+axis(1,at=seq(0,2,0.2),labels=seq(0,2,0.2),par(las=1))
+log.binom<-function(p.vec){
+  
+  a<-p.vec[1]
+  b<-p.vec[2]
+  
+  pred1a<- ((exp(a + b * data$ro)) / (1 + exp(a + b * data$ro)) ) 
+  prev1<-data$T20
+  
+  loglik1a<- prev1* log((pred1a)+0.00001)+(1-prev1)*log(1-((pred1a)-0.00001))
+  -sum(loglik1a,  na.rm=T)
+}
+n.param<-2
+logmod<-optim(c(0,0),log.binom,method="L-BFGS-B",lower=c(-10,-10),upper=c(10,10))
+logmod
+nc<-seq(0,2,0.01)
+pred2<-((exp(logmod$par[1] + logmod$par[2] * nc)) / (1 + exp(logmod$par[1] + logmod$par[2] * nc)) )
+lines(nc,pred2,lwd=2,lty=2,col="black")
+
+log.binom<-function(p.vec){
+  
+  a<-p.vec[1]
+  b<-p.vec[2]
+  
+  pred1a<- ((exp(a + b * data$ro)) / (1 + exp(a + b * data$ro)) ) 
+  prev1<-data$T60
+  
+  loglik1a<- prev1* log((pred1a)+0.00001)+(1-prev1)*log(1-((pred1a)-0.00001))
+  -sum(loglik1a,  na.rm=T)
+}
+n.param<-2
+logmod<-optim(c(0,0),log.binom,method="L-BFGS-B",lower=c(-10,-10),upper=c(10,10))
+logmod
+nc<-seq(0,2,0.01)
+pred2<-((exp(logmod$par[1] + logmod$par[2] * nc)) / (1 + exp(logmod$par[1] + logmod$par[2] * nc)) )
+lines(nc,pred2,lwd=1,lty=2,col="grey")
+
+
+
+
+###################################################################################
+## Figure 2a
+par(mfrow=c(1,1))
+plot(log(data$k+1),data$T10,pch=20,col="grey15",
+     ylab="Proportion of parasites in x% of hosts",
+     xlab="Log k",cex.lab=1.1,log="x",xlim=c(0.01,5))
+points(log(data$k+1),data$T20,col="grey30",pch=20,cex=2)
+points(log(data$k+1),data$T30,col="grey50",pch=17)
+points(log(data$k+1),data$T50,col="grey85",pch=15)
+
+legend(0.01,0.6,
+       legend=c(expression("t"[10]),expression("t"[20]),
+       expression("t"[30]),expression("t"[50])),
+       col=c("grey15","grey30","grey50","grey85"),
+       pch=c(20,20,17,15),cex=1.4)
+
+abline(v=0.055,lty=2);text(0.045,0.2,"k: 1.057")
+
+abline(v=0.03,lty=2);text(0.024,0.2,"k: 1.030")
+
+abline(v=0.1,lty=2);text(0.124,0.2,"k: 1.105")
+
+abline(v=0.2,lty=2);text(0.245,0.2,"k: 1.221")
+
+
+names(data)
+dat2<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\DataFinalApril2015.csv",header=TRUE)
+names(dat2)
+data3<-merge(data,dat2,by.x="Label",by.y="Label")
+dim(data3)
+names(data3)
+## Figure 2b
+par(mfrow=c(1,1))
+plot((1-data3$Gini.Co.efficient),data$T10,pch=20,col="grey15",
+     ylab="Proportion of parasites in x% of hosts",
+     xlab="Gini Co-efficient",cex.lab=1.1,xlim=c(0,1))
+points(1-data3$Gini.Co.efficient,data$T20,col="grey30",pch=20,cex=2)
+points(1-data3$Gini.Co.efficient,data$T60,pch=20,col="grey50")
+points(1-data3$Gini.Co.efficient,data$T50,pch=20,col="grey80")
+
+abline(v=0.06,lty=2);text(0.04,0.2,"0.06")
+
+abline(v=0.1,lty=2);text(0.08,0.25,"0.10")
+
+abline(v=0.14,lty=2);text(0.12,0.3,"0.14")
+
+abline(v=0.22,lty=2);text(0.2,0.35,"0.22")
+
+legend(0.84,1,
+       legend=c(expression("t"[10]),expression("t"[20]),
+                expression("t"[30]),expression("t"[50])),
+       col=c("grey15","grey30","grey50","grey85"),
+       pch=c(20,20,17,15),cex=1.4)
+
+
+
+ggplot(plotdat) + geom_point(aes(x=prop,y=Theta, col=treatments), alpha = 0.5)
+ggplot(plotdat) + geom_jitter(aes(x=prop,y=Theta, col=treatments))
+ggplot(plotdat) + geom_violin(aes(x=prop,y=Theta, col=treatments))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 dataoutmean<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\model_outputMEAN_i22.csv")
@@ -641,63 +813,3 @@ legend(250,0.4,legend=c("Targeted most infected","Least infected","Randomly infe
 
 sum(ifelse(rem20red>0.95,1,0))/206 ##A 95% or better reduction in transmission probability can be acheived in 32% of the studies
 sum(ifelse(rem50red>0.95,1,0))/206 
-
-###################################################################################
-## Figure 2a
-par(mfrow=c(1,1))
-plot(log(data$k+1),data$T10,pch=20,col="grey15",
-     ylab="Proportion of parasites in x% of hosts",
-     xlab="Log k",cex.lab=1.1,log="x",xlim=c(0.01,5))
-points(log(data$k+1),data$T20,col="grey30",pch=20,cex=2)
-points(log(data$k+1),data$T30,col="grey50",pch=17)
-points(log(data$k+1),data$T50,col="grey85",pch=15)
-
-legend(0.01,0.6,
-       legend=c(expression("t"[10]),expression("t"[20]),
-       expression("t"[30]),expression("t"[50])),
-       col=c("grey15","grey30","grey50","grey85"),
-       pch=c(20,20,17,15),cex=1.4)
-
-abline(v=0.055,lty=2);text(0.045,0.2,"k: 1.057")
-
-abline(v=0.03,lty=2);text(0.024,0.2,"k: 1.030")
-
-abline(v=0.1,lty=2);text(0.124,0.2,"k: 1.105")
-
-abline(v=0.2,lty=2);text(0.245,0.2,"k: 1.221")
-
-
-names(data)
-dat2<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\DataFinalApril2015.csv",header=TRUE)
-names(dat2)
-data3<-merge(data,dat2,by.x="Label",by.y="Label")
-dim(data3)
-names(data3)
-## Figure 2b
-par(mfrow=c(1,1))
-plot(1-data3$Gini.Co.efficient,data$T10,pch=20,col="grey15",
-     ylab="Proportion of parasites in x% of hosts",
-     xlab="Gini Co-efficient",cex.lab=1.1,xlim=c(0,1))
-points(1-data3$Gini.Co.efficient,data$T20,col="grey30",pch=20,cex=2)
-points(1-data3$Gini.Co.efficient,data$T30,pch=20,col="grey50")
-points(1-data3$Gini.Co.efficient,data$T50,pch=20,col="grey80")
-
-abline(v=0.06,lty=2);text(0.04,0.2,"0.06")
-
-abline(v=0.1,lty=2);text(0.08,0.25,"0.10")
-
-abline(v=0.14,lty=2);text(0.12,0.3,"0.14")
-
-abline(v=0.22,lty=2);text(0.2,0.35,"0.22")
-
-legend(0.84,1,
-       legend=c(expression("t"[10]),expression("t"[20]),
-                expression("t"[30]),expression("t"[50])),
-       col=c("grey15","grey30","grey50","grey85"),
-       pch=c(20,20,17,15),cex=1.4)
-
-
-
-ggplot(plotdat) + geom_point(aes(x=prop,y=Theta, col=treatments), alpha = 0.5)
-ggplot(plotdat) + geom_jitter(aes(x=prop,y=Theta, col=treatments))
-ggplot(plotdat) + geom_violin(aes(x=prop,y=Theta, col=treatments))

@@ -4,6 +4,8 @@ library(MASS)
 library(boot)
 library(coda)
 library(R2OpenBUGS)
+library(ggplot2)
+library(reshape2)
 
 data<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\Exploring R0.csv",header=TRUE)
 head(data);summary(data)
@@ -60,11 +62,11 @@ lines(redu[,i]~prevalence)
 ###############################################
 ## Figure 1
 
-par(mfrow=c(1,1))
+par(mfrow=c(1,2))
 par(mar=c(5,5,2,2))
 parasitesTreated<-as.numeric(data[1,14:34])
 plot(parasitesTreated~prevalence,pch="",
-     ylim=c(0,1),xlim=c(0,1),
+     ylim=c(0,1),xlim=c(0,1),cex.lab=1.1,
      ylab="Proportion of parasites",xlab="Proportion of hosts treated")
 treated<-matrix(nrow=length(prevalence),ncol=length(data$N),data=NA)
 for (i in 1:length(data$N)){
@@ -118,11 +120,11 @@ for (i in 1:ncol(distribs)) {
 }
 
 ##and the distribution were x % treated
-disttemp<-prevdist;disttemp[1,]<-0;prev01<-disttemp
+disttemp<-prevdist;disttemp[1,]<-0;prev01<-disttemp ##1%
 disttemp[1:2,]<-0;prev05<-disttemp
 disttemp[1:3,]<-0;prev10<-disttemp
 disttemp[1:4,]<-0;prev15<-disttemp
-disttemp[1:5,]<-0;prev20<-disttemp
+disttemp[1:5,]<-0;prev20<-disttemp ##20% target treated
 disttemp[1:6,]<-0;prev25<-disttemp
 disttemp[1:7,]<-0;prev30<-disttemp
 disttemp[1:8,]<-0;prev35<-disttemp
@@ -140,199 +142,99 @@ disttemp[1:19,]<-0;prev90<-disttemp
 disttemp[1:20,]<-0;prev95<-disttemp
 disttemp[1:21,]<-0;prev99<-disttemp
 
+###############################################################
+## Target treating the most infected xx% as above
+disttemp<-distribs;disttemp[1:5,]<-0;distrib20<-disttemp
+disttemp<-prevdist;disttemp[1:5,]<-0;prev20<-disttemp ##20% target treated
+###############################################################
+## Target treating the least infected xx% 
+disttemp<-distribs;disttemp[18:21,]<-0;distleast80<-disttemp
+disttemp<-prevdist;disttemp[18:21,]<-0;leastgood20<-disttemp
+###############################################################
+## Randomly treating xx% infected
+datatest<-randtest<-expand.grid(c(1:21))
+disttemp<-distribs;for (i in 1:206){
+  datatest[,i]<-sample(disttemp[,i])
+  datatest[1:5,i]<-0;randtest[,i]<-datatest[,i]
+  }
+randprev<-expand.grid(c(1:21))
+disttemp<-prevdist;for (i in 1:206){
+  datatest[,i]<-sample(disttemp[,i])
+  datatest[1:5,i]<-0;randprev[,i]<-datatest[,i]
+}
+colnames(randtest)<-colnames(randprev)<-data$Label
 ###Take for example the first case
-
-
-data2<-list(N_st=21,
-            N_counts=21,
-            para_count = structure(.Data = c(distribsALL[,11],distrib01[,11],distrib05[,11],distrib10[,11],
-                                             distrib15[,11],distrib20[,11],distrib25[,11],distrib30[,11],
-                                             distrib35[,11],distrib40[,11],distrib45[,11],distrib50[,11],
-                                             distrib55[,11],distrib60[,11],distrib65[,11],distrib70[,11],
-                                             distrib75[,11],distrib80[,11],distrib85[,11],distrib90[,11],
-                                             distrib95[,11]),
-                                  .Dim=c(21,21)),###[N_counts,N_st]
-            prev = structure(.Data =c(prevdist[,11],prev01[,11],prev05[,11],prev10[,11],prev15[,11],prev20[,11],
-                                      prev25[,11],prev30[,11],prev35[,11],prev40[,11],prev45[,11],prev50[,11],
-                                      prev55[,11],prev60[,11],prev65[,11],prev70[,11],prev75[,11],prev80[,11],
-                                      prev85[,11],prev90[,11],prev95[,11]),
-                                  .Dim=c(21,21)))
-
-fit1 <- stan(file="C:\\Users\\Ellie\\Documents\\RStudioProjects\\2080\\modelA2.stan", data=data2,
-             iter=1000, chains=2)
-
-print(fit1)
-data$Label
-proportions<-c(0,0.01,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95)
-params = extract(fit1);names(params)
-theta47<-c(mean(params$theta[,1]),mean(params$theta[,2]),mean(params$theta[,3]),mean(params$theta[,4]),
-           mean(params$theta[,5]),mean(params$theta[,6]),mean(params$theta[,7]),mean(params$theta[,8]),
-           mean(params$theta[,9]),mean(params$theta[,10]),mean(params$theta[,11]),mean(params$theta[,12]),
-           mean(params$theta[,13]),mean(params$theta[,14]),mean(params$theta[,15]),mean(params$theta[,16]),
-           mean(params$theta[,17]),mean(params$theta[,18]),mean(params$theta[,19]),mean(params$theta[,20]),
-           mean(params$theta[,21]))
-theta47Upper<-as.numeric(c(quantile(params$theta[,1],0.975),quantile(params$theta[,2],0.975),quantile(params$theta[,3],0.975),quantile(params$theta[,4],0.975),
-           quantile(params$theta[,5],0.975),quantile(params$theta[,6],0.975),quantile(params$theta[,7],0.975),quantile(params$theta[,8],0.975),
-           quantile(params$theta[,9],0.975),quantile(params$theta[,10],0.975),quantile(params$theta[,11],0.975),quantile(params$theta[,12],0.975),
-           quantile(params$theta[,13],0.975),quantile(params$theta[,14],0.975),quantile(params$theta[,15],0.975),quantile(params$theta[,16],0.975),
-           quantile(params$theta[,17],0.975),quantile(params$theta[,18],0.975),quantile(params$theta[,19],0.975),quantile(params$theta[,20],0.975),
-           quantile(params$theta[,21],0.975)))
-theta47lower<-as.numeric(c(quantile(params$theta[,1],0.025),quantile(params$theta[,2],0.025),quantile(params$theta[,3],0.025),quantile(params$theta[,4],0.025),
-                           quantile(params$theta[,5],0.025),quantile(params$theta[,6],0.025),quantile(params$theta[,7],0.025),quantile(params$theta[,8],0.025),
-                           quantile(params$theta[,9],0.025),quantile(params$theta[,10],0.025),quantile(params$theta[,11],0.025),quantile(params$theta[,12],0.025),
-                           quantile(params$theta[,13],0.025),quantile(params$theta[,14],0.025),quantile(params$theta[,15],0.025),quantile(params$theta[,16],0.025),
-                           quantile(params$theta[,17],0.025),quantile(params$theta[,18],0.025),quantile(params$theta[,19],0.025),quantile(params$theta[,20],0.025),
-                           quantile(params$theta[,21],0.025)))
-
-
-dataoutmean<-expand.grid(c(1:21))
-dataoutmean[,1]<-theta36;colnames(dataoutmean)<-sub("Var1","Study36",colnames(dataoutmean))
-dataoutmean[,2]<-theta37;colnames(dataoutmean)<-sub("V2","Study37",colnames(dataoutmean))
-dataoutmean[,3]<-theta38;colnames(dataoutmean)<-sub("V3","Study38",colnames(dataoutmean))
-dataoutmean[,4]<-theta40;colnames(dataoutmean)<-sub("V4","Study40",colnames(dataoutmean))
-dataoutmean[,5]<-theta41;colnames(dataoutmean)<-sub("V5","Study41",colnames(dataoutmean))
-dataoutmean[,6]<-theta42;colnames(dataoutmean)<-sub("V6","Study42",colnames(dataoutmean))
-dataoutmean[,7]<-theta43;colnames(dataoutmean)<-sub("V7","Study43",colnames(dataoutmean))
-dataoutmean[,8]<-theta44;colnames(dataoutmean)<-sub("V8","Study44",colnames(dataoutmean))
-dataoutmean[,9]<-theta45;colnames(dataoutmean)<-sub("V9","Study45",colnames(dataoutmean))
-dataoutmean[,10]<-theta46;colnames(dataoutmean)<-sub("V10","Study46",colnames(dataoutmean))
-dataoutmean[,11]<-theta47;colnames(dataoutmean)<-sub("V11","Study47",colnames(dataoutmean))
-
-
-dataout95upper<-expand.grid(c(1:21))
-dataout95upper[,1]<-theta36Upper;colnames(dataout95upper)<-sub("Var1","Study36",colnames(dataout95upper))
-dataout95upper[,2]<-theta37Upper;colnames(dataout95upper)<-sub("V2","Study37",colnames(dataout95upper))
-dataout95upper[,3]<-theta38Upper;colnames(dataout95upper)<-sub("V3","Study38",colnames(dataout95upper))
-dataout95upper[,4]<-theta40Upper;colnames(dataout95upper)<-sub("V4","Study40",colnames(dataout95upper))
-dataout95upper[,5]<-theta41Upper;colnames(dataout95upper)<-sub("V5","Study41",colnames(dataout95upper))
-dataout95upper[,6]<-theta42Upper;colnames(dataout95upper)<-sub("V6","Study42",colnames(dataout95upper))
-dataout95upper[,7]<-theta43Upper;colnames(dataout95upper)<-sub("V7","Study43",colnames(dataout95upper))
-dataout95upper[,8]<-theta44Upper;colnames(dataout95upper)<-sub("V8","Study44",colnames(dataout95upper))
-dataout95upper[,9]<-theta45Upper;colnames(dataout95upper)<-sub("V9","Study45",colnames(dataout95upper))
-dataout95upper[,10]<-theta46Upper;colnames(dataout95upper)<-sub("V10","Study46",colnames(dataout95upper))
-dataout95upper[,11]<-theta47Upper;colnames(dataout95upper)<-sub("V11","Study47",colnames(dataout95upper))
-
-
-dataout95lower<-expand.grid(c(1:21))
-dataout95lower[,1]<-theta36lower;colnames(dataout95lower)<-sub("Var1","Study36",colnames(dataout95lower))
-dataout95lower[,2]<-theta37lower;colnames(dataout95lower)<-sub("V2","Study37",colnames(dataout95lower))
-dataout95lower[,3]<-theta38lower;colnames(dataout95lower)<-sub("V3","Study38",colnames(dataout95lower))
-dataout95lower[,4]<-theta40lower;colnames(dataout95lower)<-sub("V4","Study40",colnames(dataout95lower))
-dataout95lower[,5]<-theta41lower;colnames(dataout95lower)<-sub("V5","Study41",colnames(dataout95lower))
-dataout95lower[,6]<-theta42lower;colnames(dataout95lower)<-sub("V6","Study42",colnames(dataout95lower))
-dataout95lower[,7]<-theta43lower;colnames(dataout95lower)<-sub("V7","Study43",colnames(dataout95lower))
-dataout95lower[,8]<-theta44lower;colnames(dataout95lower)<-sub("V8","Study44",colnames(dataout95lower))
-dataout95lower[,9]<-theta45lower;colnames(dataout95lower)<-sub("V9","Study45",colnames(dataout95lower))
-dataout95lower[,10]<-theta46lower;colnames(dataout95lower)<-sub("V10","Study46",colnames(dataout95lower))
-dataout95lower[,11]<-theta47lower;colnames(dataout95lower)<-sub("V11","Study47",colnames(dataout95lower))
-
-
-#write.csv(dataoutmean,"C:\\Users\\Ellie\\Documents\\2080\\model_outputMEAN.csv")
-#write.csv(dataout95upper,"C:\\Users\\Ellie\\Documents\\2080\\model_output95upper.csv")
-#write.csv(dataout95lower,"C:\\Users\\Ellie\\Documents\\2080\\model_output95lower.csv")
-
-plot(theta36~proportions,ylim=c(0,1),xlim=c(0,1),pch="",
-     ylab="Transmission Probability",xlab="Proportion of hosts treated")               
-lines(theta36~proportions)
-lines(theta37~proportions)
-lines(theta38~proportions)
-lines(theta40~proportions)
-lines(theta41~proportions)
-polygon(c(proportions, rev(proportions)),c(theta36Upper,rev(theta36lower)),border=NA, col="aquamarine1")
-lines(theta36~proportions)
-
-polygon(c(proportions, rev(proportions)),c(theta37Upper,rev(theta37lower)),border=NA, col="aquamarine1")
-lines(theta37~proportions)
-
-polygon(c(proportions, rev(proportions)),c(theta38Upper,rev(theta38lower)),border=NA, col="aquamarine1")
-lines(theta38~proportions)
-
-polygon(c(proportions, rev(proportions)),c(theta40Upper,rev(theta40lower)),border=NA, col="aquamarine1")
-lines(theta40~proportions)
 
 
 ###################################################################
 ##################################################################### AUTOMATED
 #######################################################################
-dataoutmean_i<-expand.grid(c(1:21))
-dataout95upper_i<-expand.grid(c(1:21))
-dataout95lower_i<-expand.grid(c(1:21))
+dataoutmean_i<-expand.grid(c(1:4))
+dataout95upper_i<-expand.grid(c(1:4))
+dataout95lower_i<-expand.grid(c(1:4))
 for (i in 1:206){
-  data2<-list(N_st=21,
+  data2<-list(N_st=4,
               N_counts=21,
-              para_count = structure(.Data = c(distribsALL[,i],distrib01[,i],distrib05[,i],distrib10[,i],
-                                               distrib15[,i],distrib20[,i],distrib25[,i],distrib30[,i],
-                                               distrib35[,i],distrib40[,i],distrib45[,i],distrib50[,i],
-                                               distrib55[,i],distrib60[,i],distrib65[,i],distrib70[,i],
-                                               distrib75[,i],distrib80[,i],distrib85[,i],distrib90[,i],
-                                               distrib95[,i]),
-                                     .Dim=c(21,21)),###[N_counts,N_st]
-              prev = structure(.Data =c(prevdist[,i],prev01[,i],prev05[,i],prev10[,i],prev15[,i],prev20[,i],
-                                        prev25[,i],prev30[,i],prev35[,i],prev40[,i],prev45[,i],prev50[,i],
-                                        prev55[,i],prev60[,i],prev65[,i],prev70[,i],prev75[,i],prev80[,i],
-                                        prev85[,i],prev90[,i],prev95[,i]),
-                               .Dim=c(21,21)))
-  
+              para_count = structure(.Data = c(distribsALL[,i],distrib20[,i],distleast80[,i],randtest[,i]),
+                                     .Dim=c(21,4)),###[N_counts,N_st]
+              prev = structure(.Data =c(prevdist[,i],prev20[,i],leastgood20[,i],randtest[,i]),
+                               .Dim=c(21,4)))
+
   fit1 <- stan(file="C:\\Users\\Ellie\\Documents\\RStudioProjects\\2080\\modelA2.stan", data=data2,
                iter=1000, chains=2)
   
   #print(fit1)
   #data$Label
   #proportions<-c(0,0.01,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95)
-  params = extract(fit1);names(params)
-  dataoutmean_i[,i]<-c(mean(params$theta[,1]),mean(params$theta[,2]),mean(params$theta[,3]),mean(params$theta[,4]),
-                       mean(params$theta[,5]),mean(params$theta[,6]),mean(params$theta[,7]),mean(params$theta[,8]),
-                       mean(params$theta[,9]),mean(params$theta[,10]),mean(params$theta[,11]),mean(params$theta[,12]),
-                       mean(params$theta[,13]),mean(params$theta[,14]),mean(params$theta[,15]),mean(params$theta[,16]),
-                       mean(params$theta[,17]),mean(params$theta[,18]),mean(params$theta[,19]),mean(params$theta[,20]),
-                       mean(params$theta[,21]))
-  dataout95upper_i[,i]<-as.numeric(c(quantile(params$theta[,1],0.975),quantile(params$theta[,2],0.975),quantile(params$theta[,3],0.975),quantile(params$theta[,4],0.975),
-                                     quantile(params$theta[,5],0.975),quantile(params$theta[,6],0.975),quantile(params$theta[,7],0.975),quantile(params$theta[,8],0.975),
-                                     quantile(params$theta[,9],0.975),quantile(params$theta[,10],0.975),quantile(params$theta[,11],0.975),quantile(params$theta[,12],0.975),
-                                     quantile(params$theta[,13],0.975),quantile(params$theta[,14],0.975),quantile(params$theta[,15],0.975),quantile(params$theta[,16],0.975),
-                                     quantile(params$theta[,17],0.975),quantile(params$theta[,18],0.975),quantile(params$theta[,19],0.975),quantile(params$theta[,20],0.975),
-                                     quantile(params$theta[,21],0.975)))
-  dataout95lower_i[,i]<-as.numeric(c(quantile(params$theta[,1],0.025),quantile(params$theta[,2],0.025),quantile(params$theta[,3],0.025),quantile(params$theta[,4],0.025),
-                                     quantile(params$theta[,5],0.025),quantile(params$theta[,6],0.025),quantile(params$theta[,7],0.025),quantile(params$theta[,8],0.025),
-                                     quantile(params$theta[,9],0.025),quantile(params$theta[,10],0.025),quantile(params$theta[,11],0.025),quantile(params$theta[,12],0.025),
-                                     quantile(params$theta[,13],0.025),quantile(params$theta[,14],0.025),quantile(params$theta[,15],0.025),quantile(params$theta[,16],0.025),
-                                     quantile(params$theta[,17],0.025),quantile(params$theta[,18],0.025),quantile(params$theta[,19],0.025),quantile(params$theta[,20],0.025),
-                                     quantile(params$theta[,21],0.025)))
+params = extract(fit1);names(params)
+  dataoutmean_i[,i]<-c(mean(params$theta[,1]),mean(params$theta[,2]),mean(params$theta[,3]),mean(params$theta[,4]))
+  dataout95upper_i[,i]<-as.numeric(c(quantile(params$theta[,1],0.975),quantile(params$theta[,2],0.975),quantile(params$theta[,3],0.975),quantile(params$theta[,4],0.975)))
+  dataout95lower_i[,i]<-as.numeric(c(quantile(params$theta[,1],0.025),quantile(params$theta[,2],0.025),quantile(params$theta[,3],0.025),quantile(params$theta[,4],0.025)))
   
 }
 
 #write.csv(dataoutmean_i,"C:\\Users\\Ellie\\Documents\\2080\\model_outputMEAN_i2.csv")
 #write.csv(dataout95upper_i,"C:\\Users\\Ellie\\Documents\\2080\\model_output95upper_i2.csv")
 #write.csv(dataout95lower_i,"C:\\Users\\Ellie\\Documents\\2080\\model_output95lower_i2.csv")
+treatments<-rep(c("0","1",seq(from=5,to=95,by=5)),each=21)
 
 
-dataoutmean<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\model_outputMEAN_i2.csv")
-dataout95upper<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\model_output95upper_i2.csv")
-dataout95lower<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\model_output95lower_i2.csv")
-colnames(dataoutmean)<-colnames(dataout95lower)<-colnames(dataout95upper)<-data$Label[1:206]
+dataoutmean<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\model_outputMEAN_i22.csv")
+dataout95upper<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\model_output95upper_i22.csv")
+dataout95lower<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\model_output95lower_i22.csv")
+colnames(dataoutmean)<-colnames(dataout95lower)<-colnames(dataout95upper)<-c("variable",data$Label[1:206])
+
+datacheck2<-melt(dataoutmean,id=1)##
+colnames(datacheck2)<-c("prop","study","theta")
+datacheck2$proportion20<-rep(data$T20,each="4")
+ggplot(datacheck2) + geom_point(aes(x=proportion20,y=theta, col=prop))
+
 
 alldata<-as.numeric(dataoutmean[1,2:207])
-rem20<-as.numeric(dataoutmean[6,2:207])
-rem50<-as.numeric(dataoutmean[12,2:207])
+rem20<-as.numeric(dataoutmean[2,2:207])
+least20<-as.numeric(dataoutmean[3,2:207])
+rand20<-as.numeric(dataoutmean[4,2:207])
 
 alldataU<-as.numeric(dataout95upper[1,2:207])
-rem20U<-as.numeric(dataout95upper[6,2:207])
-rem50U<-as.numeric(dataout95upper[12,2:207])
+rem20U<-as.numeric(dataout95upper[2,2:207])
+least20U<-as.numeric(dataout95upper[3,2:207])
+rand20U<-as.numeric(dataout95upper[4,2:207])
 
 alldataL<-as.numeric(dataout95lower[1,2:207])
-rem20L<-as.numeric(dataout95lower[6,2:207])
-rem50L<-as.numeric(dataout95lower[12,2:207])
+rem20L<-as.numeric(dataout95lower[2,2:207])
+least20L<-as.numeric(dataout95lower[3,2:207])
+rand20L<-as.numeric(dataout95lower[4,2:207])
 
 par(mfrow=c(1,1))
 par(mar=c(5,5,2,2))
 xv<-data$T20[1:206]
 #xv<-data$prevalence[1:206]/data$N[1:206]
-plot(alldata~xv,ylab="Transmission probability",ylim=c(0,1),
-     xlab="Proportion of parasites in 20% most infected hosts",xlim=c(0,1),pch="",cex.lab=1.2)
+plot(alldata~xv,ylab="Probability of infection",ylim=c(0,1),
+     xlab="Proportion of parasites in 20% of hosts",xlim=c(0,1),pch="",cex.lab=1.2)
 
 for (i in 1:206){
   segments(xv[i], alldataU[i], x1 = xv[i], y1 = alldataL[i],
-           col  = terrain.colors(10,alpha = 0.1), lty = 1, lwd = 5)
+           col  = terrain.colors(2,alpha = 0.1), lty = 1, lwd = 5)
 }
 
 for (i in 1:206){
@@ -341,11 +243,17 @@ for (i in 1:206){
 }
 
 for (i in 1:206){
-  segments(xv[i], rem50U[i], x1 = xv[i], y1 = rem50L[i],
-           col  = terrain.colors(10,alpha = 0.8), lty = 1, lwd = 5)
+  segments(xv[i], least20U[i], x1 = xv[i], y1 = least20L[i],
+           col  = terrain.colors(25,alpha = 0.8), lty = 1, lwd = 5)
 }
 
-points(alldata~xv,col="lightblue",pch=20);points(rem50~xv,col="black",pch=20);points(rem20~xv,col="blue",pch=20)
+for (i in 1:206){
+  segments(xv[i], rand20U[i], x1 = xv[i], y1 = rand20L[i],
+           col  = terrain.colors(25,alpha = 0.8), lty = 1, lwd = 5)
+}
+
+points(alldata~xv,col="lightblue",pch=20);points(least20~xv,col="black",pch=20)
+points(rem20~xv,col="blue",pch=20);points(rand20~xv,col="blue",pch=20)
 
 legend(0,1,legend=c("No treatment","Treat 20%","Treat 50%"),
        col=c("lightblue","blue","black"),
@@ -359,92 +267,96 @@ legend(0,1,legend=c("No treatment","Treat 20%","Treat 50%"),
 ###
 ##
 
-reductionacheived<-expand.grid(seq(1,20))
+reductionacheived<-expand.grid(seq(1,3))
 for(i in 2:207){
-  for (j in 2:21){
+  for (j in 2:4){
     reductionacheived[j-1,i-1]<-dataoutmean[1,i]-dataoutmean[j,i]
   }
 }
 colnames(reductionacheived)<-data$Label[1:206]
 
-reductionach95U<-expand.grid(seq(1,20))
+reductionach95U<-expand.grid(seq(1,3))
 for(i in 2:207){
-  for (j in 2:21){
+  for (j in 2:4){
     reductionach95U[j-1,i-1]<-dataout95upper[1,i]-dataout95upper[j,i]
   }
 }
 colnames(reductionach95U)<-data$Label[1:206]
 
-reductionach95L<-expand.grid(seq(1,20))
+reductionach95L<-expand.grid(seq(1,3))
 for(i in 2:207){
-  for (j in 2:21){
+  for (j in 2:4){
     reductionach95L[j-1,i-1]<-dataout95lower[1,i]-dataout95lower[j,i]
   }
 }
 colnames(reductionach95L)<-data$Label[1:206]
 
 ##percentage reduction acheived
-perredacheived<-expand.grid(seq(1,20))
+perredacheived<-expand.grid(seq(1,3))
 for(i in 2:207){
-  for (j in 2:21){
+  for (j in 2:4){
     perredacheived[j-1,i-1]<-(dataoutmean[1,i]-dataoutmean[j,i])/dataoutmean[1,i]
   }
 }
 
-perredach95U<-expand.grid(seq(1,20))
+perredach95U<-expand.grid(seq(1,3))
 for(i in 2:207){
-  for (j in 2:21){
+  for (j in 2:4){
     perredach95U[j-1,i-1]<-(dataout95upper[1,i]-dataout95upper[j,i])/dataout95upper[1,i]
   }
 }
 
-perredach95L<-expand.grid(seq(1,20))
+perredach95L<-expand.grid(seq(1,3))
 for(i in 2:207){
-  for (j in 2:21){
+  for (j in 2:4){
     perredach95L[j-1,i-1]<-(dataout95lower[1,i]-dataout95lower[j,i])/dataout95lower[1,i]
   }
 }
 colnames(perredacheived)<-colnames(perredach95U)<-colnames(perredach95L)<-data$Label[1:206]
 
-rem1red<-as.numeric(perredacheived[1,1:206])
-rem20red<-as.numeric(perredacheived[5,1:206])
-rem50red<-as.numeric(perredacheived[11,1:206])
+rem20red<-as.numeric(perredacheived[1,1:206])
+remleast20red<-as.numeric(perredacheived[2,1:206])
+remrand20red<-as.numeric(perredacheived[3,1:206])
 
-rem1Ured<-as.numeric(perredach95U[1,1:206])
-rem20Ured<-as.numeric(perredach95U[5,1:206])
-rem50Ured<-as.numeric(perredach95U[11,1:206])
+rem20redU<-as.numeric(perredach95U[1,1:206])
+remleast20redU<-as.numeric(perredach95U[2,1:206])
+remrand20redU<-as.numeric(perredach95U[3,1:206])
 
-rem1Lred<-as.numeric(perredach95L[1,1:206])
-rem20Lred<-as.numeric(perredach95L[5,1:206])
-rem50Lred<-as.numeric(perredach95L[11,1:206])
+rem20redL<-as.numeric(perredach95L[1,1:206])
+remleast20redL<-as.numeric(perredach95L[2,1:206])
+remrand20redL<-as.numeric(perredach95L[3,1:206])
 
-par(mfrow=c(3,1))
+D1<-data.frame(rem20red,rem20redU,rem20redL,remleast20red,remleast20redU,remleast20redL,
+               remrand20red,remrand20redU,remrand20redL)
+##D2<-ordered(D1,D1$rem20red) ## order the data by the ones in top 20
+
+par(mfrow=c(1,1))
 par(mar=c(5,5,2,2))
-xv<-data$T10[1:206]
+xv<-data$Label[1:206]
 #xv<-data$prevalence[1:206]/data$N[1:206]
-plot(rem1red~xv,ylab=expression(paste("Proportionate reduction in ",theta)),
+plot(rem20red~xv,ylab=expression(paste("Proportionate reduction in  ",theta)),
      ylim=c(0,1),
-     xlab="Proportion of parasites in 10% most infected hosts",
-     xlim=c(0,1),pch="",cex.lab=1.2)
+     xlab="Studies",
+     pch="",cex.lab=1.2)
 
 for (i in 1:206){
-  segments(xv[i], rem1Ured[i], x1 = xv[i], y1 = rem1Lred[i],
+  segments(xv[i], rem20redU[i], x1 = xv[i], y1 = rem20redL[i],
+           col  = terrain.colors(10,alpha = 0.7), lty = 1, lwd = 5)
+}
+
+for (i in 1:206){
+  segments(xv[i], remleast20redU[i], x1 = xv[i], y1 = remleast20redL[i],
+           col  = terrain.colors(10,alpha = 0.3), lty = 1, lwd = 5)
+}
+
+for (i in 1:206){
+  segments(xv[i], remrand20redU[i], x1 = xv[i], y1 = remrand20redL[i],
            col  = terrain.colors(10,alpha = 0.1), lty = 1, lwd = 5)
 }
 
-for (i in 1:206){
-  segments(xv[i], rem20Ured[i], x1 = xv[i], y1 = rem20Lred[i],
-           col  = terrain.colors(10,alpha = 0.5), lty = 1, lwd = 5)
-}
+points(rem20red~xv,col="lightblue",pch=20);points(remleast20red~xv,col="black",pch=20);points(remrand20red~xv,col="blue",pch=20)
 
-for (i in 1:206){
-  segments(xv[i], rem50Ured[i], x1 = xv[i], y1 = rem50Lred[i],
-           col  = terrain.colors(10,alpha = 0.8), lty = 1, lwd = 5)
-}
-
-points(rem1red~xv,col="lightblue",pch=20);points(rem50red~xv,col="black",pch=20);points(rem20red~xv,col="blue",pch=20)
-
-legend(0,1,legend=c("Remove 1%","Remove 20%","Remove 50%"),
+legend(250,0.4,legend=c("Targeted most infected","Least infected","Randomly infected"),
        col=c("lightblue","blue","black"),
        pch=20,bty="n")
 
@@ -484,23 +396,29 @@ dim(data3)
 names(data3)
 ## Figure 2b
 par(mfrow=c(1,1))
-plot(data3$Gini.Co.efficient,data$T10,pch=20,col="grey",
+plot(1-data3$Gini.Co.efficient,data$T10,pch=20,col="grey15",
      ylab="Proportion of parasites in x% of hosts",
      xlab="Gini Co-efficient",cex.lab=1.1,xlim=c(0,1))
-points(data3$Gini.Co.efficient,data$T20,col="red",pch=20,cex=2)
-points(data3$Gini.Co.efficient,data$T30,pch=20,col="grey")
-points(data3$Gini.Co.efficient,data$T50,pch=20,col="grey")
+points(1-data3$Gini.Co.efficient,data$T20,col="grey30",pch=20,cex=2)
+points(1-data3$Gini.Co.efficient,data$T30,pch=20,col="grey50")
+points(1-data3$Gini.Co.efficient,data$T50,pch=20,col="grey80")
 
-legend(0.0,1,
+abline(v=0.06,lty=2);text(0.04,0.2,"0.06")
+
+abline(v=0.1,lty=2);text(0.08,0.25,"0.10")
+
+abline(v=0.14,lty=2);text(0.12,0.3,"0.14")
+
+abline(v=0.22,lty=2);text(0.2,0.35,"0.22")
+
+legend(0.84,1,
        legend=c(expression("t"[10]),expression("t"[20]),
                 expression("t"[30]),expression("t"[50])),
-       col=c("grey","red","grey","grey"),
-       pch=20,cex=1.4)
+       col=c("grey15","grey30","grey50","grey85"),
+       pch=c(20,20,17,15),cex=1.4)
 
-abline(v=0.94,lty=2);text(0.96,0.2,"0.94")
 
-abline(v=0.9,lty=2);text(0.92,0.25,"0.90")
 
-abline(v=0.86,lty=2);text(0.88,0.3,"0.86")
-
-abline(v=0.78,lty=2);text(0.8,0.35,"0.78")
+ggplot(plotdat) + geom_point(aes(x=prop,y=Theta, col=treatments), alpha = 0.5)
+ggplot(plotdat) + geom_jitter(aes(x=prop,y=Theta, col=treatments))
+ggplot(plotdat) + geom_violin(aes(x=prop,y=Theta, col=treatments))
