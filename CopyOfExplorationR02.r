@@ -9,7 +9,7 @@ library(reshape2)
 library(adegenet)
 
 data<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\Exploring R0.csv",header=TRUE)
-head(data);summary(data)
+head(data);summary(data);dim(data)
 
 ############################################################
 ## What impact on prevalence occurs if a given proportion of
@@ -498,59 +498,6 @@ sum(ifelse(countzeros==0,1,0))
 #write.csv(dataout95upper_i,"C:\\Users\\Ellie\\Documents\\2080\\model_output95upper_i2.csv")
 #write.csv(dataout95lower_i,"C:\\Users\\Ellie\\Documents\\2080\\model_output95lower_i2.csv")
 treatments<-rep(c("0","1",seq(from=5,to=95,by=5)),each=21)
-
-###############################################
-##
-###
-#### And Now for R0
-###
-##
-################################################
-for (i in 1:206){
-  
-  data$ro[i]<-(data$k[i] * ( (1/(1-(data$prevalence[i]/data$N[i]))) ^ (1/data$k[i]) ) ) - data$k[i]
-}
-plot(data$ro,data$T20,ylim=c(0,1),xlim=c(0,2),xaxt="n",
-     ylab="Proportion of parasites in top most infected hosts",
-     xlab=expression(paste(R[0])))
-axis(1,at=seq(0,2,0.2),labels=seq(0,2,0.2),par(las=1))
-log.binom<-function(p.vec){
-  
-  a<-p.vec[1]
-  b<-p.vec[2]
-  
-  pred1a<- ((exp(a + b * data$ro)) / (1 + exp(a + b * data$ro)) ) 
-  prev1<-data$T20
-  
-  loglik1a<- prev1* log((pred1a)+0.00001)+(1-prev1)*log(1-((pred1a)-0.00001))
-  -sum(loglik1a,  na.rm=T)
-}
-n.param<-2
-logmod<-optim(c(0,0),log.binom,method="L-BFGS-B",lower=c(-10,-10),upper=c(10,10))
-logmod
-nc<-seq(0,2,0.01)
-pred2<-((exp(logmod$par[1] + logmod$par[2] * nc)) / (1 + exp(logmod$par[1] + logmod$par[2] * nc)) )
-lines(nc,pred2,lwd=2,lty=2,col="black")
-
-log.binom<-function(p.vec){
-  
-  a<-p.vec[1]
-  b<-p.vec[2]
-  
-  pred1a<- ((exp(a + b * data$ro)) / (1 + exp(a + b * data$ro)) ) 
-  prev1<-data$T60
-  
-  loglik1a<- prev1* log((pred1a)+0.00001)+(1-prev1)*log(1-((pred1a)-0.00001))
-  -sum(loglik1a,  na.rm=T)
-}
-n.param<-2
-logmod<-optim(c(0,0),log.binom,method="L-BFGS-B",lower=c(-10,-10),upper=c(10,10))
-logmod
-nc<-seq(0,2,0.01)
-pred2<-((exp(logmod$par[1] + logmod$par[2] * nc)) / (1 + exp(logmod$par[1] + logmod$par[2] * nc)) )
-lines(nc,pred2,lwd=1,lty=2,col="grey")
-
-
 
 
 ###################################################################################
