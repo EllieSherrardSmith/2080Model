@@ -57,13 +57,17 @@ text(8,1.5,"0.05 prev")
 data<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\Exploring R0.csv",header=TRUE)
 data[1:10,];summary(data);dim(data)
 ##Trying for study 1 (Label 36)
+pointsdat<-matrix(nrow=max(data$N),ncol=206)
+teststore<-matrix(nrow=max(data$N),ncol=206)
 
 proportions<-seq(0,1,length=data[1,4])
 plot(proportions~proportions,pch="",ylim=c(0,1),xlim=c(0,1),xaxt="n",par(las=2),
      ylab="Relative reduction in R0 treating most to least infected",xlab="Proportion of hosts treated")
 axis(1,at=seq(-0.01,0.99,0.2),labels=seq(0,1,0.2),par(las=1))
-##exclude 9-10, 46-48, 56-58, 68, 89, 90, 92-93, 95-96, 99-100, 106, 149, 167-169, 180 
-for (j in 181:206){
+
+
+##exclude 48, 89:90, 92:93, 95-96, 99-100, 106, 149, 167-169, 180 
+for (j in 1:206){
 
 d1<-sort(rnegbin(data[j,4],data[j,6],data[j,5]),decreasing=TRUE)
 dat<-expand.grid(d1)
@@ -90,15 +94,20 @@ kx<-ifelse(kx<0,NA,kx)
 for (i in 1:length(R0)){
 R0[i]<- (kx[i] * ( (1-prev1[i]) ^ (-1/kx[i]))) - kx[i]##1-prev as it is those who are not contributing to transmission
 R0[is.na(R0)] <- 0
+#R0[is.infinite(R0)]<- 10
 }
 
 for (i in 2:length(R0)){
   test[1]<-0
 test[i] <-  (R0[1]-R0[i])/R0[1]
 }
-
+teststore[,j]<-c(test,rep(99999,(2611-length(d1))))
 proports<-seq(0,1,length=data[j,4])
+a<-max(data$N-length(data[j,4]))
+pointsdat[,j]<-c(proports,rep(99999,(2611-length(proports))))
 
+#lines(smooth.spline(test~proports),col=transp("aquamarine4"),lwd=2)
+#}
 log.binom<-function(p.vec){
   
   a<-p.vec[1]
@@ -122,3 +131,118 @@ lines(nc,pred2,lwd=3,lty=1,col=transp("aquamarine4"))
 
 segments(x0=0.05,y0=0,x1=1,y1=0,col="white",lwd=10)
 abline(v=0.19,lty=2,col="grey")
+
+t01R0<-t05R0<-t10R0<-t15R0<-t20R0<-t25R0<-t30R0<-t50R0<-t80R0<-numeric(206)
+for(i in 1:206){
+  a<-(teststore[,i][round(pointsdat[,i],2)==0.01]);t01R0[i]<-a[1]
+  b<-(teststore[,i][round(pointsdat[,i],2)==0.05]);t05R0[i]<-b[1]
+  d<-(teststore[,i][round(pointsdat[,i],2)==0.1]);t10R0[i]<-d[1]
+  ee<-(teststore[,i][round(pointsdat[,i],2)==0.15]);t15R0[i]<-ee[1]
+  g<-(teststore[,i][round(pointsdat[,i],2)==0.2]);t20R0[i]<-g[1]
+  h<-(teststore[,i][round(pointsdat[,i],2)==0.25]);t25R0[i]<-h[1]
+  m<-(teststore[,i][round(pointsdat[,i],2)==0.30]);t30R0[i]<-m[1]
+  bg<-(teststore[,i][round(pointsdat[,i],2)==0.50]);t50R0[i]<-bg[1]
+  bm<-(teststore[,i][round(pointsdat[,i],2)==0.50]);t80R0[i]<-bm[1]
+}
+t01R0<-ifelse(t01R0<0,0,t01R0)  
+
+test2<-c(0,mean(t01R0,na.rm=TRUE),mean(t05R0,na.rm=TRUE),mean(t10R0,na.rm=TRUE),mean(t15R0,na.rm=TRUE),mean(t20R0,na.rm=TRUE),
+         mean(t25R0,na.rm=TRUE),rep(mean(t30R0,na.rm=TRUE),4),rep(mean(t50R0,na.rm=TRUE),6),rep(mean(t80R0,na.rm=TRUE),5))
+test2up<-c(0,quantile(t01R0,0.90,na.rm=TRUE),quantile(t05R0,0.90,na.rm=TRUE),quantile(t10R0,0.90,na.rm=TRUE),quantile(t15R0,0.90,na.rm=TRUE),quantile(t20R0,0.90,na.rm=TRUE),
+         quantile(t25R0,0.90,na.rm=TRUE),rep(quantile(t30R0,0.90,na.rm=TRUE),4),rep(quantile(t50R0,0.90,na.rm=TRUE),6),rep(quantile(t80R0,0.90,na.rm=TRUE),5))
+test2low<-c(0,quantile(t01R0,0.025,na.rm=TRUE),quantile(t05R0,0.025,na.rm=TRUE),quantile(t10R0,0.025,na.rm=TRUE),quantile(t15R0,0.025,na.rm=TRUE),quantile(t20R0,0.025,na.rm=TRUE),
+         quantile(t25R0,0.025,na.rm=TRUE),rep(quantile(t30R0,0.025,na.rm=TRUE),4),rep(quantile(t50R0,0.025,na.rm=TRUE),6),rep(quantile(t80R0,0.025,na.rm=TRUE),5))
+proports2<-c(0,0.01,seq(0.05,0.95,0.05),0.99)
+
+log.binom<-function(p.vec){
+  
+  a<-p.vec[1]
+  b<-p.vec[2]
+  
+  pred1a<- ((exp(a + b * proports2)) / (1 + exp(a + b * proports2)) ) 
+  prev1<-test2
+  
+  loglik1a<- prev1* log((pred1a)+0.00001)+(1-prev1)*log(1-((pred1a)-0.00001))
+  -sum(loglik1a,  na.rm=T)
+}
+n.param<-2
+logmod<-optim(c(0,5),log.binom,method="L-BFGS-B",lower=c(-10,-10),upper=c(10,100))
+logmod
+nc<-seq(0,1,0.001)
+pred2<-((exp(logmod$par[1] + logmod$par[2] * nc)) / (1 + exp(logmod$par[1] + logmod$par[2] * nc)) ) 
+
+
+log.binom<-function(p.vec){
+  
+  a<-p.vec[1]
+  b<-p.vec[2]
+  
+  pred1a<- ((exp(a + b * proports2)) / (1 + exp(a + b * proports2)) ) 
+  prev1<-test2up
+  
+  loglik1a<- prev1* log((pred1a)+0.00001)+(1-prev1)*log(1-((pred1a)-0.00001))
+  -sum(loglik1a,  na.rm=T)
+}
+n.param<-2
+logmod<-optim(c(0,5),log.binom,method="L-BFGS-B",lower=c(-10,-10),upper=c(10,100))
+logmod
+nc<-seq(0,1,0.001)
+pred2u<-((exp(logmod$par[1] + logmod$par[2] * nc)) / (1 + exp(logmod$par[1] + logmod$par[2] * nc)) ) 
+pred2u
+#lines(nc,pred2u,lwd=3,lty=2,col=transp("aquamarine4"))
+
+log.binom<-function(p.vec){
+  
+  a<-p.vec[1]
+  b<-p.vec[2]
+  
+  pred1a<- ((exp(a + b * proports2)) / (1 + exp(a + b * proports2)) ) 
+  prev1<-test2low
+  
+  loglik1a<- prev1* log((pred1a)+0.00001)+(1-prev1)*log(1-((pred1a)-0.00001))
+  -sum(loglik1a,  na.rm=T)
+}
+n.param<-2
+logmod<-optim(c(0,5),log.binom,method="L-BFGS-B",lower=c(-10,-10),upper=c(10,100))
+logmod
+nc<-seq(0,1,0.001)
+pred2l<-((exp(logmod$par[1] + logmod$par[2] * nc)) / (1 + exp(logmod$par[1] + logmod$par[2] * nc)) ) 
+
+plot(nc,pred2,pty="n",pch="",xaxt="n",yaxt="n",ylab="",xlab="")
+
+polygon(c(nc, rev(nc)),c(pred2u,rev(pred2l)),border=NA, col=transp("darkseagreen1",alpha=0.3))
+lines(nc,pred2,lwd=3,lty=1,col=transp("aquamarine4"))
+
+par(new=TRUE)
+par(bty="n")
+boxplot(t01R0,t05R0,t10R0,t15R0,t20R0,t25R0,t30R0,t50R0,t80R0,na.rm=TRUE,
+        ylim=c(0,1),col=transp("aquamarine4",alpha=0.2),cex.lab=1.1,at=seq(-0.5,7.5,1),
+        ylab=expression(paste("Relative reduction in   ",   R[0])),
+        xlab="Proportion of hosts treated from most to least infected")
+axis(1,at=seq(-0.5,7.5,1),labels=c(0.01,0.05,0.10,0.15,0.20,0.25,0.30,0.50,0.80),cex.lab=1.1)
+
+##############################################################################################
+##################################################################################################
+##
+## Exploring the basic reproductive rate R0 when beta, C and D are allowed to 
+## follow different distributions
+##
+#####################################################################
+sampnm <- function(n) qnorm(runif(n,min=pnorm(0),max=pnorm(1)))
+
+##what is beta has a normal distribution
+beta_n <- sampnm(100)
+hist(beta_n)
+
+##what id beta has a negative binomial distribution
+beta_nb <- rnegbin(100, 43, 0.5)
+  beta_nb <- beta_nb/max(beta_nb)
+
+C=10
+D=20
+
+R0_exp<-beta_n * C * D
+hist(R0_exp)
+par(new=TRUE)
+R0_exp2<-beta_nb * C * D
+hist(R0_exp2)

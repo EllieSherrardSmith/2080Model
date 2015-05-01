@@ -16,53 +16,10 @@ head(data);summary(data);dim(data)
 ## the hosts are treated (ie the most infection is removed)
 ##
 ##
-
-data$prev01T<-(data$prevalence-(0.01*data$N))/(data$N-data$N*0.01);data$prev01T<-ifelse(data$prev01T<0,0,data$prev01T)
-data$prev05T<-(data$prevalence-(0.05*data$N))/(data$N-data$N*0.05);data$prev05T<-ifelse(data$prev05T<0,0,data$prev05T)
-
-data$prev10T<-(data$prevalence-(0.1*data$N))/(data$N-data$N*0.1);data$prev10T<-ifelse(data$prev10T<0,0,data$prev10T)
-data$prev15T<-(data$prevalence-(0.15*data$N))/(data$N-data$N*0.15);data$prev15T<-ifelse(data$prev15T<0,0,data$prev15T)
-
-data$prev20T<-(data$prevalence-(0.2*data$N))/(data$N-data$N*0.2);data$prev20T<-ifelse(data$prev20T<0,0,data$prev20T)
-data$prev25T<-(data$prevalence-(0.25*data$N))/(data$N-data$N*0.25);data$prev25T<-ifelse(data$prev25T<0,0,data$prev25T)
-
-data$prev30T<-(data$prevalence-(0.3*data$N))/(data$N-data$N*0.3);data$prev30T<-ifelse(data$prev30T<0,0,data$prev30T)
-data$prev35T<-(data$prevalence-(0.35*data$N))/(data$N-data$N*0.35);data$prev35T<-ifelse(data$prev35T<0,0,data$prev35T)
-
-data$prev40T<-(data$prevalence-(0.4*data$N))/(data$N-data$N*0.4);data$prev40T<-ifelse(data$prev40T<0,0,data$prev40T)
-data$prev45T<-(data$prevalence-(0.45*data$N))/(data$N-data$N*0.45);data$prev45T<-ifelse(data$prev45T<0,0,data$prev45T)
-
-data$prev50T<-(data$prevalence-(0.5*data$N))/(data$N-data$N*0.5);data$prev50T<-ifelse(data$prev50T<0,0,data$prev50T)
-data$prev55T<-(data$prevalence-(0.55*data$N))/(data$N-data$N*0.55);data$prev55T<-ifelse(data$prev55T<0,0,data$prev55T)
-
-data$prev60T<-(data$prevalence-(0.6*data$N))/(data$N-data$N*0.6);data$prev60T<-ifelse(data$prev60T<0,0,data$prev60T)
-data$prev65T<-(data$prevalence-(0.65*data$N))/(data$N-data$N*0.65);data$prev65T<-ifelse(data$prev65T<0,0,data$prev65T)
-
-data$prev70T<-(data$prevalence-(0.70*data$N))/(data$N-data$N*0.70);data$prev70T<-ifelse(data$prev70T<0,0,data$prev70T)
-data$prev75T<-(data$prevalence-(0.75*data$N))/(data$N-data$N*0.75);data$prev75T<-ifelse(data$prev75T<0,0,data$prev75T)
-
-data$prev80T<-(data$prevalence-(0.80*data$N))/(data$N-data$N*0.80);data$prev80T<-ifelse(data$prev80T<0,0,data$prev80T)
-data$prev85T<-(data$prevalence-(0.85*data$N))/(data$N-data$N*0.85);data$prev85T<-ifelse(data$prev85T<0,0,data$prev85T)
-
-data$prev90T<-(data$prevalence-(0.90*data$N))/(data$N-data$N*0.90);data$prev90T<-ifelse(data$prev90T<0,0,data$prev90T)
-data$prev95T<-(data$prevalence-(0.95*data$N))/(data$N-data$N*0.95);data$prev95T<-ifelse(data$prev95T<0,0,data$prev95T)
-
-data$prev99T<-(data$prevalence-(0.99*data$N))/(data$N-data$N*0.99);data$prev99T<-ifelse(data$prev99T<0,0,data$prev99T)
-
-dim(data)
-prevalence<-c(0.01,0.05,0.10,0.15,0.20,0.25,0.30,0.35,0.40,0.45,0.50,0.55,0.60,0.65,0.70,0.75,0.80,0.85,0.90,0.95,0.99)
-reduction<-as.numeric(c(data[1,35:55]))
-plot(reduction~prevalence,ylim=c(0,1))
-redu<-matrix(nrow=length(prevalence),ncol=length(data$N),data=NA)
-for (i in 1:length(data$N)){
-redu[,i]<-as.numeric(c(data[i,35:55]))
-lines(redu[,i]~prevalence)
-}
-
-
-                     
+                    
 ###############################################
 ## Figure 1
+prevalence<-c(0.01,seq(0.05,0.95,0.05),0.99)
 
 par(mfrow=c(1,2))
 par(mar=c(5,5,2,2))
