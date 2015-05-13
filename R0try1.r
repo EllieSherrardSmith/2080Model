@@ -51,6 +51,47 @@ lines(R0[,i]~k,col="grey60")
 }
 text(8,1.5,"0.05 prev")
 
+###Anderson and May 1985B:
+## po <- 1 - (1 + M/k)^-k
+
+po <- numeric(nrow(data))
+
+for (i in 1:206){
+    M=data$mean[i]
+    k=data$k[i]
+
+    po[i] <- 1 - (1 + M/k)^-k
+}
+
+po
+
+prevREAL <- data$prevalence / data$N
+
+plot(po~prevREAL)
+
+log.binom<-function(p.vec){
+  
+  a<-p.vec[1]
+  b<-p.vec[2]
+  c<-p.vec[3]
+  #pred1a<- ((exp(a + b * prevREAL)) / (1 + exp(a + b * prevREAL)) ) 
+  pred1a<- (a * exp (b * exp(c * prevREAL)))
+  prev1<-po
+  
+  loglik1a<- prev1* log((pred1a)+0.00001)+(1-prev1)*log(1-((pred1a)-0.00001))
+  -sum(loglik1a,  na.rm=T)
+}
+#n.param<-2
+#logmod<-optim(c(0,0),log.binom,method="L-BFGS-B",lower=c(-10,-10),upper=c(10,100))
+#logmod
+gommod<-optim(c(0.75,-2,-0.5),log.binom,method="L-BFGS-B",lower=c(0.5,-5,-10),upper=c(0.99,-1,-0.0001))
+gommod
+nc<-seq(0,1,0.001)
+#pred2<-((exp(logmod$par[1] + logmod$par[2] * nc)) / (1 + exp(logmod$par[1] + logmod$par[2] * nc)) ) 
+pred2<-(gommod$par[1] * exp (gommod$par[2] * exp(gommod$par[3] * nc)))
+lines(nc,pred2,lwd=2,lty=2,col="red")
+
+
 ############################################################################
 ## From orginal data...and treating most infected through to the least infected
 
@@ -235,14 +276,26 @@ beta_n <- sampnm(100)
 hist(beta_n)
 
 ##what id beta has a negative binomial distribution
-beta_nb <- rnegbin(100, 43, 0.5)
-  beta_nb <- beta_nb/max(beta_nb)
-
+k=seq(0.1,5,0.1)
+beta_nb<-matrix(nrow=100,ncol=length(k))
+beta<-numeric(100)
+for(i in 1:length(k)){
+  for(j in 1:length(beta)){
+beta[j] <- rnegbin(100, 43, k[i])
+  beta_nb[,i] <- beta/max(beta)
+}
+}
+BETAmn<-numeric(length(ncol(beta_nb)))
+for (i in 1:ncol(beta_nb)) {
+     BETAmn[i]<-mean(beta_nb[,i])
+}
 C=10
 D=20
 
 R0_exp<-beta_n * C * D
 hist(R0_exp)
-par(new=TRUE)
-R0_exp2<-beta_nb * C * D
-hist(R0_exp2)
+R0_exp2<-matrix(nrow=100,ncol=length(k))
+for (i in 1:length(ncol(beta_nb))){
+R0_exp2[,i]<-beta_nb[,i] * C * D
+}
+
