@@ -24,9 +24,11 @@ prevalence<-c(0.01,seq(0.05,0.95,0.05),0.99)
 par(mfrow=c(1,2))
 par(mar=c(5,5,2,2))
 parasitesTreated<-as.numeric(data[1,14:34])
-plot(parasitesTreated~prevalence,pch="",
-     ylim=c(0,1),xlim=c(0,1),cex.lab=1.1,
+plot(parasitesTreated~prevalence,pch="",frame.plot=F,
+     ylim=c(0,1),xlim=c(0,1),cex.lab=1.1,xaxt="n",
      ylab="Proportion of parasites",xlab="Proportion of hosts treated")
+par(las=1)
+axis(1,at=c(0,0.2,0.4,0.6,0.8,1.0),labels=c(0,0.2,0.4,0.6,0.8,1.0))
 treated<-matrix(nrow=length(prevalence),ncol=length(data$N),data=NA)
 for (i in 1:length(data$N)){
   treated[,i]<-as.numeric(data[i,14:34])
@@ -217,10 +219,10 @@ disttemp<-prevdist;for (i in 1:206){
 ###################################################################
 ##################################################################### AUTOMATED
 #######################################################################
-dataoutmean_i<-data3outmean_i<-data4outmean_i<-expand.grid(c(1:21))
+dataoutmean_i<-data3outmean_i<-dataoutvar_i<-data4outmean_i<-dataoutupper_i<-dataoutlower_i<-expand.grid(c(1:21))
 dataout95upper_i<-data3out95upper_i<-data4out95upper_i<-expand.grid(c(1:21))
 dataout95lower_i<-data3out95lower_i<-data4out95lower_i<-expand.grid(c(1:21))
-for (i in 1:206){
+for (i in 1:14){
   data2<-list(N_st=21,
               N_counts=21,
               para_count = structure(.Data = c(distribsALL[,i],distrib01[,i],distrib05[,i],distrib10[,i],distrib15[,i],
@@ -271,7 +273,7 @@ data4<-list(N_st=21,
                             randprev60[,i],randprev65[,i],randprev70[,i],randprev75[,i],
                             randprev80[,i],randprev85[,i],randprev90[,i],randprev95[,i]),
                    .Dim=c(21,21)))
-  fit1 <- stan(file="C:\\Users\\Ellie\\Documents\\RStudioProjects\\2080\\modelA2.stan", data=data2,
+  fit1 <- stan(file="C:\\Users\\Ellie\\Documents\\RStudioProjects\\2080Model\\modelA2c.stan", data=data2,
                iter=1000, chains=2)
 fit2 <- stan(file="C:\\Users\\Ellie\\Documents\\RStudioProjects\\2080\\modelA2.stan", data=data3,
              iter=1000, chains=2)
@@ -286,12 +288,17 @@ params = extract(fit1);names(params)
 ##for (j in 1:21){
 ##  dataoutmean_i[j,i]<-c(mean(params$theta[,j])
 ##}
-  dataoutmean_i[,i]<-c(mean(params$theta[,1]),mean(params$theta[,2]),mean(params$theta[,3]),mean(params$theta[,4]),
-                       mean(params$theta[,5]),mean(params$theta[,6]),mean(params$theta[,7]),mean(params$theta[,8]),
-                       mean(params$theta[,9]),mean(params$theta[,10]),mean(params$theta[,11]),mean(params$theta[,12]),
-                       mean(params$theta[,13]),mean(params$theta[,14]),mean(params$theta[,15]),mean(params$theta[,16]),
-                       mean(params$theta[,17]),mean(params$theta[,18]),mean(params$theta[,19]),mean(params$theta[,20]),mean(params$theta[,21]))
-dataout95upper_i[,i]<-as.numeric(c(quantile(params$theta[,1],0.975),quantile(params$theta[,2],0.975),quantile(params$theta[,3],0.975),quantile(params$theta[,4],0.975),
+  dataoutmean_i[,i]<-c(mean(params$theta[501:1000,1]),mean(params$theta[501:1000,2]),mean(params$theta[501:1000,3]),mean(params$theta[501:1000,4]),
+                       mean(params$theta[501:1000,5]),mean(params$theta[501:1000,6]),mean(params$theta[501:1000,7]),mean(params$theta[501:1000,8]),
+                       mean(params$theta[501:1000,9]),mean(params$theta[501:1000,10]),mean(params$theta[501:1000,11]),mean(params$theta[501:1000,12]),
+                       mean(params$theta[501:1000,13]),mean(params$theta[501:1000,14]),mean(params$theta[501:1000,15]),mean(params$theta[501:1000,16]),
+                       mean(params$theta[501:1000,17]),mean(params$theta[501:1000,18]),mean(params$theta[501:1000,19]),mean(params$theta[501:1000,20]),mean(params$theta[501:1000,21]))
+  dataoutvar_i[,i]<-c(var(params$theta[501:1000,1]),var(params$theta[501:1000,2]),var(params$theta[501:1000,3]),var(params$theta[501:1000,4]),
+                     var(params$theta[501:1000,5]),var(params$theta[501:1000,6]),var(params$theta[501:1000,7]),var(params$theta[501:1000,8]),
+                     var(params$theta[501:1000,9]),var(params$theta[501:1000,10]),var(params$theta[501:1000,11]),var(params$theta[501:1000,12]),
+                     var(params$theta[501:1000,13]),var(params$theta[501:1000,14]),var(params$theta[501:1000,15]),var(params$theta[501:1000,16]),
+                     var(params$theta[501:1000,17]),var(params$theta[501:1000,18]),var(params$theta[501:1000,19]),var(params$theta[501:1000,20]),var(params$theta[501:1000,21]))#
+  dataout95upper_i[,i]<-as.numeric(c(quantile(params$theta[,1],0.975),quantile(params$theta[,2],0.975),quantile(params$theta[,3],0.975),quantile(params$theta[,4],0.975),
                       quantile(params$theta[,5],0.975),quantile(params$theta[,6],0.975),quantile(params$theta[,7],0.975),quantile(params$theta[,8],0.975),
                       quantile(params$theta[,9],0.975),quantile(params$theta[,10],0.975),quantile(params$theta[,11],0.975),quantile(params$theta[,12],0.975),
                       quantile(params$theta[,13],0.975),quantile(params$theta[,14],0.975),quantile(params$theta[,15],0.975),quantile(params$theta[,16],0.975),
@@ -337,6 +344,8 @@ data4out95lower_i[,i]<-as.numeric(c(quantile(params3$theta[,1],0.025),quantile(p
                                    quantile(params3$theta[,17],0.025),quantile(params3$theta[,18],0.025),quantile(params3$theta[,19],0.025),quantile(params3$theta[,20],0.025),quantile(params3$theta[,21],0.025)))
 
 }
+  dataoutupper_i<-  dataoutmean_i+dataoutvar_i
+  dataoutlower_i<-  dataoutmean_i-dataoutvar_i
 
 #write.csv(dataoutmean_i,"C:\\Users\\Ellie\\Documents\\2080\\model_outputMEAN_i2.csv")
 #write.csv(dataout95upper_i,"C:\\Users\\Ellie\\Documents\\2080\\model_output95upper_i2.csv")
@@ -394,9 +403,15 @@ for(i in 2:207){
   }
 };colnames(reductionacheivedr20)<-c("count",data$Label[1:206]) 
 
+for (j in 2:207){
+  for(i in 1:20){
+    reductionacheivedr20[i,j]<-ifelse(reductionacheivedr20[i,j]<0,0,reductionacheivedr20[i,j])
+  }}
 #################
-## Figure 3
+## Figure 4
+par(new=TRUE)
 proportion<-c(0.01,seq(0.05,0.95,0.05))
+par(mar=c(10,25,8,5))
 plot(reductionacheivedt20[,1]~proportion,pch="",ylim=c(0,1),xlim=c(0,1),par(las=1),
      xlab="Proportion of the host population treated",cex.lab=1.1,bty="n",yaxt="n",
      ylab=expression(paste("Effective reduction in  ", theta)))
@@ -488,6 +503,7 @@ names(dat2)
 data3<-merge(data,dat2,by.x="Label",by.y="Label")
 dim(data3)
 names(data3)
+
 ## Figure 2b
 par(mfrow=c(1,1))
 plot((1-data3$Gini.Co.efficient),data$T10,pch=20,col="grey15",
@@ -519,6 +535,198 @@ ggplot(plotdat) + geom_violin(aes(x=prop,y=Theta, col=treatments))
 
 
 
+############################
+## Figure 3
+###############################
+
+data<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\Exploring R0.csv",header=TRUE)
+data[1:10,];summary(data);dim(data)
+##Trying for study 1 (Label 36)
+pointsdat<-matrix(nrow=max(data$N),ncol=206)
+teststore<-matrix(nrow=max(data$N),ncol=206)
+
+proportions<-seq(0,1,length=data[1,4])
+for (j in 1:206){
+  
+  d1<-sort(rnegbin(data[j,4],data[j,6],data[j,5]),decreasing=TRUE)
+  dat<-expand.grid(d1)
+  test<-R0<-prev1<-kx<-dat1<-numeric(length(d1))
+  
+  #R0[1]<- (data[1,5] * ( pr1 ^ (-1/data[1,5]))) - data[1,5]
+  
+  for(i in 1:nrow(dat)){
+    dat[,i+1]<-ifelse(dat[,i]==max(dat[,i]),0,dat[,i])
+  }
+  
+  for (i in 1:length(prev1)){
+    prev1[i]<-sum(ifelse(dat[,i]==0,0,1))/length(dat[,i])
+  }
+  
+  kx[1]<-data[j,5]
+  for (i in 2:length(kx)){
+    kx[i]<-(mean(dat[,i])^2-(var(dat[,i])/length(dat[,1])))/(var(dat[,i])-mean(dat[,i]))
+    kx<-ifelse(kx<0,NA,kx)
+  }
+  
+  
+  
+  for (i in 1:length(R0)){
+    R0[i]<- (kx[i] * ( (1-prev1[i]) ^ (-1/kx[i]))) - kx[i]##1-prev as it is those who are not contributing to transmission
+    R0[is.na(R0)] <- 0
+    #R0[is.infinite(R0)]<- 10
+  }
+  
+  for (i in 2:length(R0)){
+    test[1]<-0
+    test[i] <-  (R0[1]-R0[i])/R0[1]
+  }
+  teststore[,j]<-c(test,rep(99999,(2611-length(d1))))
+  proports<-seq(0,1,length=data[j,4])
+  a<-max(data$N-length(data[j,4]))
+  pointsdat[,j]<-c(proports,rep(99999,(2611-length(proports))))
+
+  log.binom<-function(p.vec){
+    
+    a<-p.vec[1]
+    b<-p.vec[2]
+    
+    pred1a<- ((exp(a + b * proports)) / (1 + exp(a + b * proports)) ) 
+    prev1<-test
+    
+    loglik1a<- prev1* log((pred1a)+0.00001)+(1-prev1)*log(1-((pred1a)-0.00001))
+    -sum(loglik1a,  na.rm=T)
+  }
+  n.param<-2
+  logmod<-optim(c(0,5),log.binom,method="L-BFGS-B",lower=c(-10,-10),upper=c(10,100))
+  logmod
+  nc<-seq(0,1,0.001)
+  pred2<-((exp(logmod$par[1] + logmod$par[2] * nc)) / (1 + exp(logmod$par[1] + logmod$par[2] * nc)) ) 
+  lines(nc,pred2,lwd=3,lty=1,col=transp("aquamarine4"))
+  
+}
+
+
+t01R0<-t05R0<-t10R0<-t15R0<-t20R0<-t25R0<-t30R0<-t35R0<-
+  t40R0<-t45R0<-t50R0<-
+  t55R0<-t60R0<-t65R0<-t70R0<-t75R0<-t80R0<-t85R0<-
+  t90R0<-t95R0<-t99R0<-numeric(206)
+for(i in 1:206){
+  a<-(teststore[,i][round(pointsdat[,i],2)==0.01]);t01R0[i]<-a[1]
+  b<-(teststore[,i][round(pointsdat[,i],2)==0.05]);t05R0[i]<-b[1]
+  d<-(teststore[,i][round(pointsdat[,i],2)==0.1]);t10R0[i]<-d[1]
+  ee<-(teststore[,i][round(pointsdat[,i],2)==0.15]);t15R0[i]<-ee[1]
+  g<-(teststore[,i][round(pointsdat[,i],2)==0.2]);t20R0[i]<-g[1]
+  h<-(teststore[,i][round(pointsdat[,i],2)==0.25]);t25R0[i]<-h[1]
+  m<-(teststore[,i][round(pointsdat[,i],2)==0.30]);t30R0[i]<-m[1]
+  m1<-(teststore[,i][round(pointsdat[,i],2)==0.35]);t35R0[i]<-m1[1]
+  m2<-(teststore[,i][round(pointsdat[,i],2)==0.40]);t40R0[i]<-m2[1]
+  m3<-(teststore[,i][round(pointsdat[,i],2)==0.45]);t45R0[i]<-m3[1]
+  bg<-(teststore[,i][round(pointsdat[,i],2)==0.50]);t50R0[i]<-bg[1]
+  bg1<-(teststore[,i][round(pointsdat[,i],2)==0.55]);t55R0[i]<-bg1[1]
+  bg2<-(teststore[,i][round(pointsdat[,i],2)==0.60]);t60R0[i]<-bg2[1]
+  bg3<-(teststore[,i][round(pointsdat[,i],2)==0.65]);t65R0[i]<-bg3[1]
+  bg4<-(teststore[,i][round(pointsdat[,i],2)==0.70]);t70R0[i]<-bg4[1]
+  bg5<-(teststore[,i][round(pointsdat[,i],2)==0.75]);t75R0[i]<-bg5[1]
+  bm<-(teststore[,i][round(pointsdat[,i],2)==0.80]);t80R0[i]<-bm[1]
+  bm1<-(teststore[,i][round(pointsdat[,i],2)==0.85]);t85R0[i]<-bm1[1]
+  bm2<-(teststore[,i][round(pointsdat[,i],2)==0.90]);t90R0[i]<-bm2[1]
+  bm3<-(teststore[,i][round(pointsdat[,i],2)==0.95]);t95R0[i]<-bm3[1]
+  bm4<-(teststore[,i][round(pointsdat[,i],2)==0.99]);t99R0[i]<-bm4[1]
+}
+t01R0<-ifelse(t01R0<0,0,t01R0)  
+
+test2<-c(0,mean(t01R0,na.rm=TRUE),mean(t05R0,na.rm=TRUE),mean(t10R0,na.rm=TRUE),mean(t15R0,na.rm=TRUE),mean(t20R0,na.rm=TRUE),
+         mean(t25R0,na.rm=TRUE),mean(t30R0,na.rm=TRUE),mean(t35R0,na.rm=TRUE),mean(t40R0,na.rm=TRUE),
+         mean(t45R0,na.rm=TRUE),mean(t50R0,na.rm=TRUE),mean(t55R0,na.rm=TRUE),mean(t60R0,na.rm=TRUE),
+         mean(t65R0,na.rm=TRUE),mean(t70R0,na.rm=TRUE),mean(t75R0,na.rm=TRUE),mean(t80R0,na.rm=TRUE),
+         mean(t85R0,na.rm=TRUE),mean(t90R0,na.rm=TRUE),mean(t95R0,na.rm=TRUE),mean(t99R0,na.rm=TRUE))
+test2up<-c(0,quantile(t01R0,0.975,na.rm=TRUE),quantile(t05R0,0.975,na.rm=TRUE),quantile(t10R0,0.975,na.rm=TRUE),quantile(t15R0,0.975,na.rm=TRUE),quantile(t20R0,0.975,na.rm=TRUE),
+           quantile(t25R0,0.975,na.rm=TRUE),quantile(t30R0,0.975,na.rm=TRUE),quantile(t35R0,0.975,na.rm=TRUE),
+           quantile(t40R0,0.975,na.rm=TRUE),quantile(t45R0,0.975,na.rm=TRUE),quantile(t50R0,0.975,na.rm=TRUE),
+           quantile(t55R0,0.975,na.rm=TRUE),quantile(t60R0,0.975,na.rm=TRUE),quantile(t65R0,0.975,na.rm=TRUE),
+           quantile(t70R0,0.975,na.rm=TRUE),quantile(t75R0,0.975,na.rm=TRUE),quantile(t80R0,0.975,na.rm=TRUE),
+           quantile(t85R0,0.975,na.rm=TRUE),quantile(t90R0,0.975,na.rm=TRUE),quantile(t95R0,0.975,na.rm=TRUE),quantile(t99R0,0.975,na.rm=TRUE))
+test2low<-c(0,quantile(t01R0,0.025,na.rm=TRUE),quantile(t05R0,0.025,na.rm=TRUE),quantile(t10R0,0.025,na.rm=TRUE),quantile(t15R0,0.025,na.rm=TRUE),quantile(t20R0,0.025,na.rm=TRUE),
+            quantile(t25R0,0.025,na.rm=TRUE),quantile(t30R0,0.025,na.rm=TRUE),quantile(t35R0,0.025,na.rm=TRUE),
+            quantile(t40R0,0.025,na.rm=TRUE),quantile(t45R0,0.025,na.rm=TRUE),quantile(t50R0,0.025,na.rm=TRUE),
+            quantile(t55R0,0.025,na.rm=TRUE),quantile(t60R0,0.025,na.rm=TRUE),quantile(t65R0,0.025,na.rm=TRUE),
+            quantile(t70R0,0.025,na.rm=TRUE),quantile(t75R0,0.025,na.rm=TRUE),quantile(t80R0,0.025,na.rm=TRUE),
+            quantile(t85R0,0.025,na.rm=TRUE),quantile(t90R0,0.025,na.rm=TRUE),quantile(t95R0,0.025,na.rm=TRUE),quantile(t99R0,0.025,na.rm=TRUE))
+proports2<-c(0,0.01,seq(0.05,0.95,0.05),0.99)
+
+log.binom<-function(p.vec){
+  
+  a<-p.vec[1]
+  b<-p.vec[2]
+  
+  pred1a<- ((exp(a + b * proports2)) / (1 + exp(a + b * proports2)) ) 
+  prev1<-test2
+  
+  loglik1a<- prev1* log((pred1a)+0.00001)+(1-prev1)*log(1-((pred1a)-0.00001))
+  -sum(loglik1a,  na.rm=T)
+}
+n.param<-2
+logmod<-optim(c(0,5),log.binom,method="L-BFGS-B",lower=c(-10,-10),upper=c(10,100))
+logmod
+nc<-seq(0,1,0.001)
+pred2<-((exp(logmod$par[1] + logmod$par[2] * nc)) / (1 + exp(logmod$par[1] + logmod$par[2] * nc)) ) 
+
+
+log.binom<-function(p.vec){
+  
+  a<-p.vec[1]
+  b<-p.vec[2]
+  
+  pred1a<- ((exp(a + b * proports2)) / (1 + exp(a + b * proports2)) ) 
+  prev1<-test2up
+  
+  loglik1a<- prev1* log((pred1a)+0.00001)+(1-prev1)*log(1-((pred1a)-0.00001))
+  -sum(loglik1a,  na.rm=T)
+}
+n.param<-2
+logmod<-optim(c(0,5),log.binom,method="L-BFGS-B",lower=c(-10,-10),upper=c(10,100))
+logmod
+nc<-seq(0,1,0.001)
+pred2u<-((exp(logmod$par[1] + logmod$par[2] * nc)) / (1 + exp(logmod$par[1] + logmod$par[2] * nc)) ) 
+pred2u
+#lines(nc,pred2u,lwd=3,lty=2,col=transp("aquamarine4"))
+
+log.binom<-function(p.vec){
+  
+  a<-p.vec[1]
+  b<-p.vec[2]
+  
+  pred1a<- ((exp(a + b * proports2)) / (1 + exp(a + b * proports2)) ) 
+  prev1<-test2low
+  
+  loglik1a<- prev1* log((pred1a)+0.00001)+(1-prev1)*log(1-((pred1a)-0.00001))
+  -sum(loglik1a,  na.rm=T)
+}
+n.param<-2
+logmod<-optim(c(0,5),log.binom,method="L-BFGS-B",lower=c(-10,-10),upper=c(10,100))
+logmod
+nc<-seq(0,1,0.001)
+pred2l<-((exp(logmod$par[1] + logmod$par[2] * nc)) / (1 + exp(logmod$par[1] + logmod$par[2] * nc)) ) 
+
+par(mar=c(5,6,2,2))
+plot(nc,pred2,pty="n",pch="",yaxt="n",xaxt="n",ylab="",xlab="")
+
+polygon(c(nc, rev(nc)),c(pred2u,rev(pred2l)),border=NA, col=transp("darkseagreen1",alpha=0.3))
+lines(nc,pred2,lwd=3,lty=1,col=transp("aquamarine4"))
+
+par(new=TRUE)
+par(bty="n")
+par(las=2)
+par(mar=c(5,5,2,2))
+boxplot(rep(0,206),t01R0,t05R0,t10R0,t15R0,t20R0,t25R0,t30R0,t35R0,t40R0,t45R0,t50R0,
+        t55R0,t60R0,t65R0,t70R0,t75R0,t80R0,t85R0,t90R0,t95R0,t99R0,
+        na.rm=TRUE,
+        ylim=c(0,1),col=transp("aquamarine4",alpha=0.2),cex.lab=1.1,at=seq(-1,20,1),
+        ylab=expression(paste("Relative reduction in   ",   R[0])),xaxt="n",
+        xlab="Proportion of hosts treated from most to least infected")
+par(las=1)
+proports3<-seq(0.0,1,0.1)
+axis(1,at=seq(-1,20,length=11),labels=proports3,cex.lab=1.5)
 
 
 
@@ -542,9 +750,9 @@ ggplot(plotdat) + geom_violin(aes(x=prop,y=Theta, col=treatments))
 
 
 
-
-
-
+##############
+## Other info....
+####
 dataoutmean<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\model_outputMEAN_i22.csv")
 dataout95upper<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\model_output95upper_i22.csv")
 dataout95lower<-read.csv("C:\\Users\\Ellie\\Documents\\2080\\model_output95lower_i22.csv")
