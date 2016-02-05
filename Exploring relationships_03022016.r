@@ -32,6 +32,15 @@ library(gridBase)
 library(rootSolve)
 library(deSolve)
 
+#install.packages('inline')
+#install.packages('Rcpp')
+#options(repos = c(getOption("repos"), rstan = "http://wiki.rstan-repo.googlecode.com/git/"))
+#install.packages('rstan', type = 'source')
+
+#options(repos=c(getOption('repos'), glmer2stan="http://xcelab.net/R"))
+#install.packages('glmer2stan', type='source')
+#library(glmer2stan)
+
 ######################################################
 ###                                                ###
 ###  ####      ##    ##########   ##               ### 
@@ -191,3 +200,57 @@ plotting_funcs(dat_nem_ai_year,name_x="ai_year")
 plotting_funcs(dat_nem_bio_5,name_x="bio 5")
 plotting_funcs(dat_nem_bio_10,name_x="bio 10")
 plotting_funcs(dat_nem_bio_15,name_x="bio 15")
+
+
+######################################################
+## building the general linear model including relative explanatory variables
+dim(dat_nem)
+
+mod_nem_full  <-  glm(cbind(round(T20*totalParasites),(totalParasites-round(T20*totalParasites)) ) ~ mean_para_length_F_mm + mean_host_mass +
+                        dLong + dLat + ai_yr + bio_5 + bio_10 + bio_15, data = dat_nem, family = binomial)
+mod_nem_full
+
+data_glm <- list(N  = 58,
+                 x1 = log(dat_nem$bio_15+1),
+                 x2 = log(dat_nem$mean_para_length_F_mm+1),
+                 x3 = log(dat_nem$dLong^2+1),
+                 y  = dat_nem$T20)
+
+###################################
+## Bio-indicators are correlated i.e. just use 1 in the final model
+## Ran the gom finction on bio 5 10 and 15 and gives same correlation
+
+test_glm <- stan(file="C:\\Users\\Ellie\\Documents\\RStudioProjects\\2080Model\\gom_two variables.stan", data=data_glm,
+              iter=1000, chains=4)
+rstan::traceplot(test_glm, inc_warmup = FALSE)
+params1 = extract(test_glm);names(params1)
+print(test_glm)
+
+
+nc_x1 <- seq(0,max(log(dat_nem$bio_15+1)),length=300)
+nc_x2 <- seq(0,max(log(dat_nem$mean_para_length_F_mm+1)),length=300)
+nc_x3 <- seq(0,max(log(dat_nem$dLong^2+1)),length=300)
+
+pred_glm1 <- mean(params1$alpha) + mean(params1$beta1) * nc_x1 + 
+                                   mean(params1$beta2) * nc_x2 + 
+                                   mean(params1$beta3) * nc_x3
+
+plot(dat_nem$T20~log(dat_nem$bio_15+1),pch=20,col="red",bty="n",
+     main = "GLM: logistic regression with bioindicator 15, ai_yr and Longitude (log transformed)", cex.main = 1.4,
+     ylab = "T20",cex.lab=1.2,ylim=c(0,1),
+     xlab = "Bio-indicator (red = bio 15; blue = parasite length (mm); green = dLong^2)",xlim=c(0,12))
+points(pred_glm1~nc_x1,col="darkred")
+points(dat_nem$T20~log(dat_nem$mean_para_length_F_mm+1),pch=20,col="blue")
+points(pred_glm1~nc_x2,col="blue")
+points(dat_nem$T20~log(dat_nem$dLong^2+1),pch=20,col="green")
+points(pred_glm1~nc_x3,col="green")
+
+pred_glm_x1 <- mean(params1$alpha) + mean(params1$beta1) * nc_x1
+pred_glm_x2 <- mean(params1$alpha) + mean(params1$beta2) * nc_x2
+pred_glm_x3 <- mean(params1$alpha) + mean(params1$beta3) * nc_x3
+lines(pred_glm_x1 ~ nc_x1)
+lines(pred_glm_x2 ~ nc_x2)
+lines(pred_glm_x3 ~ nc_x3)
+
+###################################
+## Bio-indicators are correlated i.e. just use 1 in the final model
