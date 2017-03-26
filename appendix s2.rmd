@@ -26,7 +26,7 @@ distributions to those that are generated using the mean, N of hosts, and a meas
 ###Step 1
 ```{r}
 library(MASS)
-library(reshape2)
+library(reshape)
 ```
 
 ###Example Using Real Data; supplied by Darren Shaw September 2013
@@ -78,6 +78,7 @@ raw<-data.frame(mk)
 props<-c(0.01,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95,0.99)#the proportions we want
 ```
 
+
 ```{r}
 names<-paste("t",props,sep="")#names for each list of proportions
 tvals<-matrix(NA,nrow=dim(raw)[2],ncol=length(props))# a matrix to store the tx values in - rows = studies, cols = tx values
@@ -85,34 +86,169 @@ tvals<-matrix(NA,nrow=dim(raw)[2],ncol=length(props))# a matrix to store the tx 
 
 for (j in 1:length(props))# first loop cycles through desired tx values contained in props above
 {
-	for (i in 1:dim(raw)[2]) #second loop cycles through each column of the data (which is a vector of proportions of parasites in each host from most to least infected)
-	{
-	vec<-raw[,i]             #make a vector from the column
-	vec<-na.omit(vec)        #take out NAs after values reach 1 (it's a ragged array)
-	N<-length(vec)           #number of hosts = number of rows
-	Nx<-round(props[j]*N)    # gets the row which is x of the way down the column
-	if (Nx==0) tvals[i,j]<-0 #if it rounds Nx to 0, there is no such thing as a zeroth row, so make tx 0
-	else {tx<-vec[Nx]        # gets the value in that column - the proportion of parasites captured in the x most infected hosts
-	tvals[i,j]<-tx           # rowi=study index colj=tx index}
+  for (i in 1:dim(raw)[2]) #second loop cycles through each column of the data (which is a vector of proportions of parasites in each host from most to least infected)
+  {
+    vec<-raw[,i]             #make a vector from the column
+    vec<-na.omit(vec)        #take out NAs after values reach 1 (it's a ragged array)
+    N<-length(vec)           #number of hosts = number of rows
+    Nx<-round(props[j]*N)    # gets the row which is x of the way down the column
+    if (Nx==0) tvals[i,j]<-0 #if it rounds Nx to 0, there is no such thing as a zeroth row, so make tx 0
+    else {tx<-vec[Nx]        # gets the value in that column - the proportion of parasites captured in the x most infected hosts
+    tvals[i,j]<-tx           # rowi=study index colj=tx index}
+    
+    }
+  }
+  
+}
+t.vals_Observed<-t(tvals)
+```
 
+###Step 2 
+###Generate the estimated distributions from the real data summary information; mean, N, var  
+```{r}
+dmean = 0.2444444                   #This is the sample mean in study 'Aa'
+samp = 585                          #This is the number of hosts (N) in study 'Aa'
+k = 0.2335546                       #This is the k estimate from the mean var and N in study 'Aa'
+
+mk<-matrix(data = NA, nrow = samp, ncol = 100) # creates a matrix with
+                                                # rows equal to sample size and columns equal to iteration number
+nmk<-numeric(samp)                              # storage vector also equal to sample size
+
+for( i in 1:100) # bootstrap starts (runs for 10000) iterations
+	{ 
+
+	dist1<-rnegbin(samp, dmean, k)      # creates a negbin distribution with your data
+	dizzy<-sort(dist1,decreasing = TRUE) #sorts distribution highest parasite count first
+
+		for (j in 1:samp) # a nested loop which counts through the number of hosts
+
+			{
+
+		            addup<-sum(dizzy[1:j])                      # cumulative sum of parasites 
+     			    if (sum(dizzy)>0){nmk[j]<-addup/sum(dizzy)} # if there are ANY parasites this gives the cumulative proportion transmission per host
+            		    else {nmk[j]<-0 }                           # if there are no parasites pop stops a problem due to division by 0
+
+			}
+
+	mk[,i]<-nmk # puts nmk into matrix mk in column i
+
+	}
+
+fk<-numeric(samp)
+
+for (i in 1:samp)
+
+	{fk[i]<-mean(mk[i,])} # take average of 10000 iterations for each row (each sample)
+
+raw<-data.frame(fk)
+props<-c(0.01,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95,0.99)
+###The proportion of hosts to which we want to fit parasite populations
+
+tvals<-matrix(NA,nrow=dim(raw)[2],ncol=length(props))# a matrix to store the tx values in - rows = studies, cols = tx values
+
+for (j in 1:length(props))# first loop cycles through desired tx values contained in props above
+	{
+	for (i in 1:dim(raw)[2]) #second loop cycles through each column of the data (which is a vector of proportions of parasites in each host from most to least infected)
+		{
+		vec<-raw[,i]          #make a vector from the column
+		vec<-na.omit(vec)     #take out NAs after values reach 1 (it's a ragged array)
+		N<-length(vec)        #number of hosts = number of rows
+		Nx<-round(props[j]*N) #gets the row which is x of the way down the column
+		
+		if (Nx==0) tvals[i,j]<-0 #if it rounds Nx to 0, there is no such thing as a zeroth row, so make tx 0
+		else {tx<-vec[Nx]        # gets the value in that column - the proportion of parasites captured in the x most infected hosts
+		tvals[i,j]<-tx           # rowi=study index colj=tx index}
+			}
 		}
 	}
 
-}
-
-#t.vals<-cast(tvals)
-
-##########
-#data<-sort(Pkell.place[,1:2],decreasing=TRUE)# copy the data matrix here and change number col to fit data)
-#	data
-
-#t.vals[2,]<-t.vals[1,]*sum(data)
-#t.vals[2,]
-
-#t.vals<-cast(t.vals)
+t.vals_Estimated<-data.frame(tvals) #stick it in a dataframe and name the columns
 ```
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+###Data comparison
+These distributions can be put together for all the data with complete raw parasite counts. These can then be compared statistically. The data are provided in Appendix S1; Table S2.
+
+###Step 3
+###Calculating Poulin's D and Gini Coefficient
+```{r}
+##############################################
+##
+## Poulin's D function (Sherrard-Smith, R version 3.3.3)
+## 
+##############################################
+
+poulD <- function(dat){
+    	N=length(dat)
+x=sumx=numeric(N)
+  
+ 	for(j in 1:N){
+    		x[j]=mean(dat[1:j])
+ 		 }
+  	for(i in 1:N){
+    		sumx[i]=sum(x[1:i])
+  		}
+PoulinsD = 1 - (2*sum(sumx)/ mean(dat)*N*(N+1))
+  	return(list(PoulinsD))
+}
+##############################################
+##
+## Gini coefficient function (Sherrard-Smith, R version 3.3.3)
+## 
+##############################################
+Gini <- function(dat){
+    	N=length(dat)
+	abs_diff = array(dim=c(N,N))
+x=sumx=ABS_3=numeric(N) 
+
+	for(j in 1:N){
+    		x[j]=mean(dat[1:j])
+ 		 }
+  	for(i in 1:N){
+    for(j in 1:N){
+      		abs_diff[j,i] = (dat[i] - dat[j]) 
+ 		 }
+         } 
+abs_diff2 = ifelse(abs_diff < 0, abs_diff*-1,abs_diff) 
+GiniCoef = sum(abs_diff2) / (2 * N * sum(dat))
+return(list(GiniCoef))
+}
+```
+
+###Step 4
+###Ecological Analysis
+This section provides the script and output of the analyses of the ecological factors potentially important in
+determining parasite aggregation in host populations. The data used for this analysis are in the supplementary
+file ‘SherrardSmithetalDATA.csv’. This file contains the following columns (for more details please see the
+main text):
+• **label**: Identifies individual record - these match up with those given in the summary of the references
+• **parasite.taxa**; parasite.type, parasite.species: Details about the parasites included in the database
+• **host.taxa**; host.common.name; host.species: Details about the hosts included in the database
+• **transmission**: The parasite transmission mode
+• **host.management**: Whether and how the host population is managed
+• **habitat**: The host’s habitat
+• **eat.meat**: Whether or not the host eats other animals
+• **social**: Whether or not the host is social
+• **n**: The number of hosts sampled
+• **k**: The negative binomial shape parameter
+• **mean**: The mean abundance (i.e. total.parasites divided by n)
+• **total.parasites**: The total number of parasites recorded in the study
+• **gini**: The gini coefficient
+• **poulinD**: Poulin’s index of dispersion, D
+• **t1-t99**: The proportion of parasites in x proportion of hosts
+
+```{r}
+rm(list=ls()) #remove previous objects and packages
+dframe1<-read.csv('SherrardSmithetalDATA.csv')
+require(lme4)
+require(car)
+require(MASS)
+require(MuMIn)
+require(arm)
+require(multcomp)
+require(visreg)
+require(glmmADMB)
+require(ResourceSelection)
+```
 
 
 ## Including Plots
