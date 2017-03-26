@@ -238,7 +238,7 @@ main text):
 
 ```{r}
 rm(list=ls()) #remove previous objects and packages
-dframe1<-read.csv('SherrardSmithetalDATA.csv')
+dframe1<-read.csv('C://Malaria//SherrardSmithetalDATA.csv')
 require(lme4)
 require(car)
 require(MASS)
@@ -250,13 +250,39 @@ require(glmmADMB)
 require(ResourceSelection)
 ```
 
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+# Remove one study with outlying mean abundance
+df2 <- subset(dframe1, label != "227")
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+First, we assessed the correlations between our putative explanatory variables to check their suitability for
+inclusion in the model.
+```{r}
+# This function is from 'Mixed effects models and extensions in
+# ecology with R'. (2009).Zuur, AF, Ieno, EN, Walker, N, Saveliev,
+# AA, and Smith, GM. Springer.
+
+panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...) {
+usr <- par("usr")
+on.exit(par(usr))
+par(usr = c(0, 1, 0, 1))
+r <- abs(cor(x, y))
+txt <- format(c(r, 0.123456789), digits = digits)[1]
+txt <- paste(prefix, txt, sep = "")
+if (missing(cex.cor))
+cex.cor <- 0.8/strwidth(txt)
+text(0.5, 0.5, txt, cex = cex.cor * r)
+}
+pairs(~n + mean + poulinD + gini + t20 + k, data = df2, lower.panel = panel.smooth,
+upper.panel = panel.cor, na.action = na.omit)
+```
+
+```{r}
+mod <- glmmadmb(gini ~ n + log(mean) + transmission + social +
+habitat + eat.meat + host.management + parasite.type +
+(1 | parasite.taxa/parasite.species) + (1 | host.taxa/host.species),
+data = df2, family = "beta")
+anova(mod)
+summary(mod)
+hist(resid(mod))
+```
