@@ -1,0 +1,126 @@
+---
+title: "Appendix S2: Ecological drivers of parasite aggregation: a meta-analysis of adherence to the 20/80 rule"
+author: "E. Sherrard-Smith, J. F. Stephenson, E. Gillingham, R. Brackley, D. Shaw, S. E. Perkins"
+date: "26 March 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This supplement provides the script for the data preparation and calculation of *k*, Gini coefficient, Poulin's D and *t<sub>20*. The script and output of the analyses of the ecological factors potentially important in
+determining parasite aggregation in host populations. The data used for this analysis are in the supplementary
+file ‘SherrardSmithetalDATA.csv’ (Appendix S1; Table S1). 
+
+
+
+## A step by step run through of the data analysis for 20:80 #####
+
+We explore whether parasite populations fit the '20:80' distribution where 80% of the parasites are contained within 20% of the hosts. First, we explore real data on this relationship and then compare these 
+distributions to those that are generated using the mean, N of hosts, and a measure of variance.
+
+
+###Step 1
+```{r}
+library(MASS)
+library(reshape2)
+```
+
+###Example Using Real Data; supplied by Darren Shaw September 2013
+```{r}
+CnodosMarWilliams63 <- rep(seq(0,5,1),c(496,58,18,7,2,4))
+```
+
+First data is summarised to give the appropriate information on mean, variance, host and parasite number for the comparison of these real distributions with those that are estimated.
+
+```{r}
+data<-sort(CnodosMarWilliams63,decreasing=TRUE)
+	data
+	sampmean<-mean(data)
+	sampmean               ###3.446
+		a<-numeric(10000)
+		for(i in 1:10000) a[i]<-mean(sample(data,replace=T),na.rm=T)
+		quantile(a,c(0.025,0.975))
+	sumNpar<-sum(data)
+	sumNpar
+	N<-length(data)
+	N
+	var<-var(data)
+	var
+	k<-(sampmean^2-(var/N))/(var-sampmean)
+	k
+```
+
+
+Generate the distribution of parasites in a given proportion of the hosts Using the real data distributions
+```{r}
+real2<-data.frame(data)
+
+##distribution of parasites in the sample population
+real3<-data.frame(sort(real2[,1],decreasing=TRUE))
+
+samp<-length(real3[,1])
+nmk<-numeric(samp)
+mk<-matrix(data = NA, nrow = samp, ncol = 1) 
+
+for (j in 1:samp) ## a nested loop which counts through the number of hosts
+  {
+            addup<-sum(real3[1:j,1])             ## cumulative sum of parasites 
+     if (sum(real3)>0){nmk[j]<-addup/sum(real3)} ## if there are ANY parasites this gives the cumulative proportion transmission per host
+            else {nmk[j]<-0 }                    ## if there are no parasites pop stops a problem due to division by 0
+  }
+
+mk[,1]<-nmk                                      ## puts nmk into matrix mk in column i
+raw<-data.frame(mk)
+props<-c(0.01,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95,0.99)#the proportions we want
+```
+
+```{r}
+names<-paste("t",props,sep="")#names for each list of proportions
+tvals<-matrix(NA,nrow=dim(raw)[2],ncol=length(props))# a matrix to store the tx values in - rows = studies, cols = tx values
+
+
+for (j in 1:length(props))# first loop cycles through desired tx values contained in props above
+{
+	for (i in 1:dim(raw)[2]) #second loop cycles through each column of the data (which is a vector of proportions of parasites in each host from most to least infected)
+	{
+	vec<-raw[,i]             #make a vector from the column
+	vec<-na.omit(vec)        #take out NAs after values reach 1 (it's a ragged array)
+	N<-length(vec)           #number of hosts = number of rows
+	Nx<-round(props[j]*N)    # gets the row which is x of the way down the column
+	if (Nx==0) tvals[i,j]<-0 #if it rounds Nx to 0, there is no such thing as a zeroth row, so make tx 0
+	else {tx<-vec[Nx]        # gets the value in that column - the proportion of parasites captured in the x most infected hosts
+	tvals[i,j]<-tx           # rowi=study index colj=tx index}
+
+		}
+	}
+
+}
+
+#t.vals<-cast(tvals)
+
+##########
+#data<-sort(Pkell.place[,1:2],decreasing=TRUE)# copy the data matrix here and change number col to fit data)
+#	data
+
+#t.vals[2,]<-t.vals[1,]*sum(data)
+#t.vals[2,]
+
+#t.vals<-cast(t.vals)
+```
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
