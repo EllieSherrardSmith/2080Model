@@ -2,7 +2,7 @@
 title: "Appendix S2: Ecological drivers of parasite aggregation: a meta-analysis of adherence to the 20/80 rule"
 author: "E. Sherrard-Smith, J. F. Stephenson, E. Gillingham, R. Brackley, D. Shaw, S. E. Perkins"
 date: "26 March 2017"
-output: html_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
@@ -38,7 +38,7 @@ First data is summarised to give the appropriate information on mean, variance, 
 
 ```{r}
 data<-sort(CnodosMarWilliams63,decreasing=TRUE)
-	data
+	data[1:200]
 	sampmean<-mean(data)
 	sampmean               ###3.446
 		a<-numeric(10000)
@@ -69,32 +69,45 @@ mk<-matrix(data = NA, nrow = samp, ncol = 1)
 for (j in 1:samp) ## a nested loop which counts through the number of hosts
   {
             addup<-sum(real3[1:j,1])             ## cumulative sum of parasites 
-     if (sum(real3)>0){nmk[j]<-addup/sum(real3)} ## if there are ANY parasites this gives the cumulative proportion transmission per host
-            else {nmk[j]<-0 }                    ## if there are no parasites pop stops a problem due to division by 0
+     if (sum(real3)>0){nmk[j]<-addup/sum(real3)} ## if there are ANY parasites 
+                                                 ## this gives the cumulative 
+                                                 ## proportion transmission per host
+            else {nmk[j]<-0 }                    ## if there are no parasites pop 
+                                                 ## stops a problem due to division  
+                                                 ## by 0
   }
 
 mk[,1]<-nmk                                      ## puts nmk into matrix mk in column i
 raw<-data.frame(mk)
-props<-c(0.01,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95,0.99)#the proportions we want
+props<-c(0.01,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,
+         0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95,0.99)
+#the proportions we will investigate
 ```
 
 
 ```{r}
 names<-paste("t",props,sep="")#names for each list of proportions
-tvals<-matrix(NA,nrow=dim(raw)[2],ncol=length(props))# a matrix to store the tx values in - rows = studies, cols = tx values
+tvals<-matrix(NA,nrow=dim(raw)[2],ncol=length(props))# a matrix to store the tx values 
+                                                     # rows = studies,  
+                                                     # cols = tx values
 
 
-for (j in 1:length(props))# first loop cycles through desired tx values contained in props above
+for (j in 1:length(props))# first loop cycles through desired tx values 
+                          # contained in props above
 {
-  for (i in 1:dim(raw)[2]) #second loop cycles through each column of the data (which is a vector of proportions of parasites in each host from most to least infected)
+  for (i in 1:dim(raw)[2]) # second loop cycles through each column of the data 
+                           # (which is a vector of proportions of parasites in each  
+                           # host from most to least infected)
   {
-    vec<-raw[,i]             #make a vector from the column
-    vec<-na.omit(vec)        #take out NAs after values reach 1 (it's a ragged array)
-    N<-length(vec)           #number of hosts = number of rows
+    vec<-raw[,i]             # make a vector from the column
+    vec<-na.omit(vec)        # take out NAs after values reach 1 (it's a ragged array)
+    N<-length(vec)           # number of hosts = number of rows
     Nx<-round(props[j]*N)    # gets the row which is x of the way down the column
-    if (Nx==0) tvals[i,j]<-0 #if it rounds Nx to 0, there is no such thing as a zeroth row, so make tx 0
-    else {tx<-vec[Nx]        # gets the value in that column - the proportion of parasites captured in the x most infected hosts
-    tvals[i,j]<-tx           # rowi=study index colj=tx index}
+    if (Nx==0) tvals[i,j]<-0 # if it rounds Nx to 0, there is no such thing as 
+                             # a zeroth row, so make tx 0
+    else {tx<-vec[Nx]        # gets the value in that column - the proportion of  
+                             # parasites captured in the x most infected hosts
+    tvals[i,j]<-tx           # rowi=study index colj=tx index
     
     }
   }
@@ -108,10 +121,12 @@ t.vals_Observed<-t(tvals)
 ```{r}
 dmean = 0.2444444                   #This is the sample mean in study 'Aa'
 samp = 585                          #This is the number of hosts (N) in study 'Aa'
-k = 0.2335546                       #This is the k estimate from the mean var and N in study 'Aa'
+k = 0.2335546                       #This is the k estimate from the mean var and N 
+                                    #in study 'Aa'
 
-mk<-matrix(data = NA, nrow = samp, ncol = 100) # creates a matrix with
-                                                # rows equal to sample size and columns equal to iteration number
+mk<-matrix(data = NA, nrow = samp, ncol = 100)  # creates a matrix with
+                                                # rows equal to sample size and  
+                                                # columns equal to iteration number
 nmk<-numeric(samp)                              # storage vector also equal to sample size
 
 for( i in 1:100) # bootstrap starts (runs for 10000) iterations
@@ -125,8 +140,12 @@ for( i in 1:100) # bootstrap starts (runs for 10000) iterations
 			{
 
 		            addup<-sum(dizzy[1:j])                      # cumulative sum of parasites 
-     			    if (sum(dizzy)>0){nmk[j]<-addup/sum(dizzy)} # if there are ANY parasites this gives the cumulative proportion transmission per host
-            		    else {nmk[j]<-0 }                           # if there are no parasites pop stops a problem due to division by 0
+     			    if (sum(dizzy)>0){nmk[j]<-addup/sum(dizzy)} # if there are ANY parasites 
+		                                                      # this gives the cumulative   
+		                                                      # proportion transmission per 
+		                                                      # host
+            		    else {nmk[j]<-0 }  # if there are no parasites pop stops 
+		                                   # a problem due to division by 0
 
 			}
 
@@ -141,32 +160,68 @@ for (i in 1:samp)
 	{fk[i]<-mean(mk[i,])} # take average of 10000 iterations for each row (each sample)
 
 raw<-data.frame(fk)
-props<-c(0.01,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95,0.99)
+props<-c(0.01,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,
+         0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95,0.99)
 ###The proportion of hosts to which we want to fit parasite populations
 
-tvals<-matrix(NA,nrow=dim(raw)[2],ncol=length(props))# a matrix to store the tx values in - rows = studies, cols = tx values
+tvals<-matrix(NA,nrow=dim(raw)[2],ncol=length(props))
 
-for (j in 1:length(props))# first loop cycles through desired tx values contained in props above
+for (j in 1:length(props))
 	{
-	for (i in 1:dim(raw)[2]) #second loop cycles through each column of the data (which is a vector of proportions of parasites in each host from most to least infected)
+	for (i in 1:dim(raw)[2]) 
 		{
-		vec<-raw[,i]          #make a vector from the column
-		vec<-na.omit(vec)     #take out NAs after values reach 1 (it's a ragged array)
-		N<-length(vec)        #number of hosts = number of rows
-		Nx<-round(props[j]*N) #gets the row which is x of the way down the column
+		vec<-raw[,i]          
+		vec<-na.omit(vec)     
+		N<-length(vec)        
+		Nx<-round(props[j]*N)
 		
-		if (Nx==0) tvals[i,j]<-0 #if it rounds Nx to 0, there is no such thing as a zeroth row, so make tx 0
-		else {tx<-vec[Nx]        # gets the value in that column - the proportion of parasites captured in the x most infected hosts
-		tvals[i,j]<-tx           # rowi=study index colj=tx index}
+		if (Nx==0) tvals[i,j]<-0 
+		else {tx<-vec[Nx]        
+		tvals[i,j]<-tx           
 			}
 		}
 	}
 
-t.vals_Estimated<-data.frame(tvals) #stick it in a dataframe and name the columns
+t.vals_Estimated<-data.frame(tvals) 
 ```
 
 ###Data comparison
 These distributions can be put together for all the data with complete raw parasite counts. These can then be compared statistically. The data are provided in Appendix S1; Table S2.
+
+```{r}
+dat<-read.csv("C:\\Malaria\\SherrardSmithetalGROUNDTRUTH.csv")
+stackT20<-c(dat$estimated0.2,dat$real0.2)
+stackT40<-c(dat$estimated0.4,dat$real0.4)
+stackT60<-c(dat$estimated0.6,dat$real0.6)
+stackT80<-c(dat$estimated0.8,dat$real0.8)
+
+##create a data frame with the stacked data
+datatype<-c(rep("estimate",27),rep("real",27))
+mat<-data.frame(datatype,stackT20,stackT40,
+	stackT60,stackT80)
+
+###Compare observed and estimated data
+modt20<-glm(log(mat$stackT20)~mat$datatype,family=gaussian) 
+summary.lm(modt20)
+```
+
+```{r}
+modt40<-glm(log(mat$stackT40)~mat$datatype,family=gaussian)
+summary.lm(modt40)
+
+modt60<-glm(log(mat$stackT60)~mat$datatype,family=gaussian)
+summary.lm(modt60)
+
+modt80<-glm(log(mat$stackT80)~mat$datatype,family=gaussian)
+summary.lm(modt80)
+par(mfrow=c(2,2))
+plot(modt80)
+boxplot(log(mat$stackT20)~mat$datatype,ylab="T20")
+boxplot(log(mat$stackT40)~mat$datatype,ylab="T40")
+boxplot(log(mat$stackT60)~mat$datatype,ylab="T60")
+boxplot(log(mat$stackT80)~mat$datatype,ylab="T80")
+```
+
 
 ###Step 3
 ###Calculating Poulin's D and Gini Coefficient
@@ -217,23 +272,39 @@ return(list(GiniCoef))
 ###Step 4
 ###Ecological Analysis
 This section provides the script and output of the analyses of the ecological factors potentially important in
-determining parasite aggregation in host populations. The data used for this analysis are in the supplementary
-file ‘SherrardSmithetalDATA.csv’. This file contains the following columns (for more details please see the
+determining parasite aggregation in host populations. The data used for this analysis are in Appendix S1; Table S1. This file contains the following columns (for more details please see the
 main text):
+
 • **label**: Identifies individual record - these match up with those given in the summary of the references
+
+• **lab.field**: Whether the study was conducted in a lab or field setting
+
 • **parasite.taxa**; parasite.type, parasite.species: Details about the parasites included in the database
+
 • **host.taxa**; host.common.name; host.species: Details about the hosts included in the database
+
 • **transmission**: The parasite transmission mode
+
 • **host.management**: Whether and how the host population is managed
+
 • **habitat**: The host’s habitat
+
 • **eat.meat**: Whether or not the host eats other animals
+
 • **social**: Whether or not the host is social
+
 • **n**: The number of hosts sampled
+
 • **k**: The negative binomial shape parameter
+
 • **mean**: The mean abundance (i.e. total.parasites divided by n)
+
 • **total.parasites**: The total number of parasites recorded in the study
+
 • **gini**: The gini coefficient
+
 • **poulinD**: Poulin’s index of dispersion, D
+
 • **t1-t99**: The proportion of parasites in x proportion of hosts
 
 ```{r}
@@ -282,7 +353,60 @@ mod <- glmmadmb(gini ~ n + log(mean) + transmission + social +
 habitat + eat.meat + host.management + parasite.type +
 (1 | parasite.taxa/parasite.species) + (1 | host.taxa/host.species),
 data = df2, family = "beta")
-anova(mod)
+Anova(mod)
 summary(mod)
 hist(resid(mod))
 ```
+
+```{r}
+# this function tests for overdispersion. It's from
+# http://glmm.wikidot.com/faq
+overdisp_fun <- function(model) {
+## number of variance parameters in an n-by-n
+## variance-covariance matrix
+vpars <- function(m) {
+nrow(m) * (nrow(m) + 1)/2
+}
+model.df <- sum(sapply(VarCorr(model), vpars)) + length(fixef(model))
+rdf <- nrow(model.frame(model)) - model.df
+rp <- residuals(model, type = "pearson")
+Pearson.chisq <- sum(rp^2)
+prat <- Pearson.chisq/rdf
+pval <- pchisq(Pearson.chisq, df = rdf, lower.tail = FALSE)
+c(chisq = Pearson.chisq, ratio = prat, rdf = rdf, p = pval)
+}
+overdisp_fun(mod)
+```
+
+Hosmer-Lemeshow goodness of fit test with
+
+```{r}
+# ResourceSelection package
+hoslem.test(df2$gini, y = fitted(mod))
+```
+
+###Post-hoc tests of significant effects
+####Social structure
+Solitary animals have more highly aggregated parasites than social animals.
+```{r}
+summary(df2$social)
+visreg(mod, 'social') # Gives the partial residuals used to plot
+# Fig 3.
+summary(glht(mod, mcp(social = "Tukey")))
+```
+
+####Host habitat
+Aquatic parasites are significantly less aggregated than terrestrial ones.
+```{r}
+summary(df2$habitat)
+visreg(mod, 'habitat') #Gives the partial residuals used to plot
+# Fig 3.
+summary(glht(mod, mcp(habitat = "Tukey")))
+```
+
+####Sample size, n
+Aggregation increases as you sample more hosts.
+```{r}
+visreg(mod, "n")
+```
+
